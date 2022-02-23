@@ -1,4 +1,18 @@
 {
+  "messages": {
+    "global": [
+      {
+        "purpose": "info",
+        "title": "Developers, we're listening!",
+        "text": "Tell us about your experience using Hiro products",
+        "learnMoreUrl": "https://survey.hiro.so",
+        "learnMoreText": "Take our survey →",
+        "publishedAt": "",
+        "dismissible": false,
+        "chainTarget": "testnet"
+      }
+    ]
+  },
   "activeFiatProviders": {
     "transak": { "name": "transak", "enabled": true },
     "okcoin": { "name": "okcoin", "enabled": true }
