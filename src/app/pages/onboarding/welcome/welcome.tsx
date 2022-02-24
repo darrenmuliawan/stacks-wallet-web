@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useRouteHeader } from '@app/common/hooks/use-route-header';
@@ -10,6 +10,8 @@ import { RouteUrls } from '@shared/route-urls';
 import { useHasAllowedDiagnostics } from '@app/store/onboarding/onboarding.hooks';
 
 import { WelcomeLayout } from './welcome.layout';
+import { whenPageMode } from '@app/common/utils';
+import { openNewTabWalletPage } from '@shared/utils/open-wallet-page';
 
 export const WelcomePage = memo(() => {
   const [hasAllowedDiagnostics] = useHasAllowedDiagnostics();
@@ -22,7 +24,7 @@ export const WelcomePage = memo(() => {
 
   const [isGeneratingWallet, setIsGeneratingWallet] = useState(false);
 
-  const startOnboarding = useCallback(async () => {
+  const generateNewWallet = useCallback(async () => {
     setIsGeneratingWallet(true);
     await makeWallet();
 
@@ -34,6 +36,15 @@ export const WelcomePage = memo(() => {
     navigate(RouteUrls.BackUpSecretKey);
   }, [makeWallet, analytics, decodedAuthRequest, navigate]);
 
+  const triggerOnboardingAction = useMemo(
+    () =>
+      whenPageMode({
+        popup: () => void openNewTabWalletPage(),
+        full: () => void generateNewWallet(),
+      }),
+    [generateNewWallet]
+  );
+
   useEffect(() => {
     if (hasAllowedDiagnostics === undefined) navigate(RouteUrls.RequestDiagnostics);
 
@@ -44,7 +55,7 @@ export const WelcomePage = memo(() => {
   return (
     <WelcomeLayout
       isGeneratingWallet={isGeneratingWallet}
-      onStartOnboarding={() => startOnboarding()}
+      onStartOnboarding={triggerOnboardingAction}
       onRestoreWallet={() => navigate(RouteUrls.SignIn)}
     />
   );
