@@ -7,7 +7,7 @@ export function CenteredPageContainer(props: FlexProps) {
       flexGrow={1}
       flexDirection="column"
       height={['70vh', '90vh']}
-      justifyContent={['start', 'center']}
+      justifyContent={['start', 'start', 'center']}
       mb="loose"
       {...props}
     />

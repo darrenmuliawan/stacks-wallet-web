@@ -8,7 +8,7 @@ import { SendButton } from './send-button';
 export const HomeActions = (props: StackProps) => {
   return (
     <Suspense fallback={<></>}>
-      <Stack isInline spacing="base-tight" {...props}>
+      <Stack isInline mt={['base', 'unset']} spacing="base-tight" {...props}>
         <SendButton />
         <ReceiveButton />
         <BuyButton />

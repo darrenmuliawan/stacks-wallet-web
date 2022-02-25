@@ -1,7 +1,7 @@
 import { Flex, FlexProps } from '@stacks/ui';
 
 import { Caption } from '@app/components/typography';
-import NoFunds from '@assets/images/no-funds-light.png';
+import NoFunds from '@assets/images/no-funds.png';
 import { OnboardingSelectors } from '@tests/integration/onboarding/onboarding.selectors';
 import { SecondaryButton } from '@app/components/secondary-button';
 
@@ -17,7 +17,7 @@ export function NoAssets({ onFundAccount, ...props }: NoAssetProps) {
       py="extra-loose"
       {...props}
     >
-      <img src={NoFunds} width="78px" />
+      <img src={NoFunds} width="88px" />
       <Caption maxWidth="248px" mt="extra-loose" textAlign="center">
         This is where you’ll see your balances. Get some STX to get started.
       </Caption>

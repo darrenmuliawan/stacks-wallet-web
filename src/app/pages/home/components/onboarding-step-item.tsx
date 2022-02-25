@@ -1,15 +1,12 @@
 import { FiArrowRight, FiCheck } from 'react-icons/fi';
-import { Box, Circle, color, Flex, Stack } from '@stacks/ui';
+import { Box, Circle, color, Flex, Stack, useMediaQuery } from '@stacks/ui';
 
 import { Tooltip } from '@app/components/tooltip';
 import { Body, Caption, Text, Title } from '@app/components/typography';
 import { Link } from '@app/components/link';
-import { isFullPage, isPopup } from '@app/common/utils';
 import { OnboardingSelectors } from '@tests/integration/onboarding/onboarding.selectors';
 import { RouteType } from '@shared/models/onboarding-types';
 
-const fullPageStepMaxWidth = '200px';
-const popupPageStepWidth = '160px';
 const externalLinkInfo =
   'This link will take you to an external third-party website that is not affiliated with Hiro Systems PBC.';
 
@@ -37,23 +34,23 @@ interface OnboardingStepItemProps {
 export function OnboardingStepItem(props: OnboardingStepItemProps) {
   const { action, body, imageFull, imagePopup, isDone, onClick, routeType, title } = props;
 
+  const [desktopViewport] = useMediaQuery('(min-width: 480px)');
+
   return (
     <Stack
-      _hover={{
-        cursor: isPopup && !isDone ? 'pointer' : 'unset',
-      }}
+      _hover={{ cursor: !desktopViewport && !isDone ? 'pointer' : 'unset' }}
       border={['1px solid', 'unset']}
       borderColor={color('border')}
       borderRadius={['10px', 'unset']}
       flexGrow={1}
-      maxWidth={['unset', fullPageStepMaxWidth]}
-      onClick={isPopup && !isDone ? onClick : undefined}
-      p={['base', 'unset']}
+      onClick={!desktopViewport && !isDone ? onClick : undefined}
+      pl={['base', 'unset']}
+      pr="base"
+      py={['base', 'unset']}
       spacing="base"
-      width={[popupPageStepWidth, 'unset']}
     >
       <Box height={['46px', '100px']} width={['55px', '132px']}>
-        {isFullPage ? (
+        {desktopViewport ? (
           <StepIllustration image={imageFull} />
         ) : !isDone ? (
           <StepIllustration image={imagePopup} />
@@ -61,17 +58,19 @@ export function OnboardingStepItem(props: OnboardingStepItemProps) {
           <PopupDoneIcon />
         )}
       </Box>
-      <Stack spacing="base-tight">
+      <Flex flexDirection="column">
         <Title
-          color={isPopup && isDone ? color('text-caption') : color('text-title')}
+          color={!desktopViewport && isDone ? color('text-caption') : color('text-title')}
           fontSize={[1, 2]}
           lineHeight="24px"
         >
           {title}
         </Title>
-        {isFullPage ? <Body>{body}</Body> : null}
-      </Stack>
-      {isFullPage ? (
+        <Body display={['none', 'block']} mt="tight">
+          {body}
+        </Body>
+      </Flex>
+      {desktopViewport ? (
         isDone ? (
           <Box
             data-testid={OnboardingSelectors.StepItemDone}

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiX } from 'react-icons/fi';
-import { Circle, color, Flex, Stack } from '@stacks/ui';
+import { Circle, color, Flex, Grid, Stack } from '@stacks/ui';
 
 import { HOME_FULL_PAGE_MAX_WIDTH } from '@app/components/global-styles/full-page-styles';
 import { useAnalytics } from '@app/common/hooks/analytics/use-analytics';
@@ -103,7 +103,7 @@ export function OnboardingStepsList() {
       <SpaceBetween
         maxWidth={['unset', HOME_FULL_PAGE_MAX_WIDTH]}
         mt={['tight', 'loose']}
-        px={['base-loose', 'unset']}
+        px={['base-loose', 'base-loose', 'unset']}
         width="100%"
       >
         <Stack spacing="tight">
@@ -127,28 +127,32 @@ export function OnboardingStepsList() {
         borderBottom="3px solid"
         borderBottomColor={color('bg-4')}
         data-testid={OnboardingSelectors.StepsList}
-        flexWrap={['wrap', 'no-wrap']}
-        gap={['tight', 'unset']}
         justifyContent={['start', 'center']}
         mt={['loose', 'extra-loose']}
         pb={['loose', '48px']}
-        px={['base-loose', 'unset']}
-        rowGap={['tight', 'unset']}
         width="100%"
       >
-        {onboardingSteps.map(step => (
-          <OnboardingStepItem
-            action={step.action}
-            body={step.body}
-            imageFull={step.imageFull}
-            imagePopup={step.imagePopup}
-            isDone={onboardingStepsStatus[step.title] === OnboardingStepStatus.Done}
-            key={step.title}
-            onClick={() => handleStepStart(step)}
-            routeType={step.routeType}
-            title={step.title}
-          />
-        ))}
+        <Grid
+          gap={[3, 'unset']}
+          maxWidth={['unset', HOME_FULL_PAGE_MAX_WIDTH]}
+          px={['base-loose', 'base-loose', 'unset']}
+          templateColumns={['repeat(2, 2fr)', 'repeat(4, 1fr)']}
+          width="100%"
+        >
+          {onboardingSteps.map(step => (
+            <OnboardingStepItem
+              action={step.action}
+              body={step.body}
+              imageFull={step.imageFull}
+              imagePopup={step.imagePopup}
+              isDone={onboardingStepsStatus[step.title] === OnboardingStepStatus.Done}
+              key={step.title}
+              onClick={() => handleStepStart(step)}
+              routeType={step.routeType}
+              title={step.title}
+            />
+          ))}
+        </Grid>
       </Flex>
     </>
   );

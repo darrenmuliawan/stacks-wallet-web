@@ -1,10 +1,9 @@
 import { Suspense, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { Stack } from '@stacks/ui';
+import { Flex, Stack } from '@stacks/ui';
 
 import { useRouteHeader } from '@app/common/hooks/use-route-header';
 import { useOnboardingState } from '@app/common/hooks/auth/use-onboarding-state';
-import { isFullPage } from '@app/common/utils';
 import { HOME_FULL_PAGE_MAX_WIDTH } from '@app/components/global-styles/full-page-styles';
 import { Header } from '@app/components/header';
 import { HiroMessages } from '@app/features/hiro-messages/hiro-messages';
@@ -51,19 +50,18 @@ export function Home() {
           data-testid="home-page"
           maxWidth={['unset', HOME_FULL_PAGE_MAX_WIDTH]}
           mt="extra-loose"
-          px={['base-loose', 'unset']}
+          px={['base-loose', 'base-loose', 'unset']}
           spacing="loose"
           width="100%"
         >
-          <Stack
+          <Flex
+            flexDirection={['column', 'row']}
             alignItems={['start', 'center']}
-            isInline={isFullPage}
             justifyContent={['unset', 'space-between']}
-            spacing="base"
           >
             <CurrentAccount />
             <HomeActions />
-          </Stack>
+          </Flex>
           {account && (
             <HomeTabs
               balances={

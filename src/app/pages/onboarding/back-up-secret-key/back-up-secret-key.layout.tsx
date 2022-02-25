@@ -1,7 +1,6 @@
-import { Box, Flex, Stack } from '@stacks/ui';
+import { Box, Flex, Stack, useMediaQuery } from '@stacks/ui';
 
 import { Text } from '@app/components/typography';
-import { isFullPage, isPopup } from '@app/common/utils';
 import { CenteredPageContainer } from '@app/components/centered-page-container';
 import { CENTERED_FULL_PAGE_MAX_WIDTH } from '@app/components/global-styles/full-page-styles';
 import { PageTitle } from '@app/components/page-title';
@@ -16,9 +15,19 @@ interface BackUpSecretKeyLayoutProps {
 export function BackUpSecretKeyLayout(props: BackUpSecretKeyLayoutProps): JSX.Element {
   const { secretKeyDisplay, onBackedUpSecretKey } = props;
 
+  const [desktopViewport] = useMediaQuery('(min-width: 860px)');
+
   return (
     <CenteredPageContainer>
-      <Stack isInline={isFullPage} pb="loose" px={['loose', 'unset']} width="100%">
+      <Flex
+        justifyContent="start"
+        flexDirection={['column', 'column', 'unset']}
+        maxWidth="1160px"
+        mt="tight"
+        pb="loose"
+        px="loose"
+        width="100%"
+      >
         <Flex
           alignItems={['start', 'center']}
           flexGrow={1}
@@ -35,23 +44,25 @@ export function BackUpSecretKeyLayout(props: BackUpSecretKeyLayoutProps): JSX.El
               access your account on a new device, in a different wallet, or in case you lose your
               password — so back it up somewhere safe.
             </Text>
-            {isFullPage && <BackUpSecretKeyActions onBackedUpSecretKey={onBackedUpSecretKey} />}
+            {desktopViewport && (
+              <BackUpSecretKeyActions onBackedUpSecretKey={onBackedUpSecretKey} />
+            )}
           </Stack>
         </Flex>
         <Flex
           alignItems={['start', 'center']}
           flexGrow={1}
           justifyContent="center"
-          mt={['base', 'unset']}
+          mt={['loose', 'unset']}
         >
           <Box width={['344px', '446px']}>{secretKeyDisplay}</Box>
         </Flex>
-        {isPopup && (
+        {!desktopViewport && (
           <Stack mt="loose" spacing="loose">
             <BackUpSecretKeyActions onBackedUpSecretKey={onBackedUpSecretKey} />
           </Stack>
         )}
-      </Stack>
+      </Flex>
     </CenteredPageContainer>
   );
 }
