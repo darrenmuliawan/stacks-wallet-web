@@ -17,3 +17,5 @@ yalc.lock
 coverage
 .jest-cache
 release_body.md
+notes.txt
+report.txt
