@@ -8,6 +8,7 @@ import { Header } from '@app/components/header';
 import { HiroMessages } from '@app/features/hiro-messages/hiro-messages';
 import { ActivityList } from '@app/features/activity-list/account-activity';
 import { BalancesList } from '@app/features/balances-list/balances-list';
+import { DataList } from '@app/features/data-list/data-list';
 import { CurrentAccount } from '@app/pages/home/components/account-area';
 import { HomeActions } from '@app/pages/home/components/home-actions';
 import { RouteUrls } from '@shared/route-urls';
@@ -61,6 +62,7 @@ export const Home = () => {
               />
             }
             activity={<ActivityList />}
+            dataList={<DataList />}
           />
         )}
       </Stack>
