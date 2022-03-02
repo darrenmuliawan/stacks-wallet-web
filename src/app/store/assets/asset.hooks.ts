@@ -10,7 +10,7 @@ import {
   useCurrentAccountUnanchoredBalances,
 } from '@app/query/balance/balance.hooks';
 import { useCurrentAccountStxAddressState } from '../accounts/account.hooks';
-import { transformAssets } from './utils';
+import { getBitcoinAddress, transformAssets, transformBitcoinAssets } from './utils';
 import { getFullyQualifiedAssetName } from '@app/common/hooks/use-selected-asset';
 import {
   useAssetsWithMetadata,
@@ -95,3 +95,34 @@ export function useFungibleTokenBaseState() {
   if (!principal) return [];
   return mergeAssetBalances(anchoredAssets, unanchoredAssets, 'ft');
 }
+
+/**
+ * 
+ * @returns 
+ */
+export const useBitcoinTokenState = () => {
+  const stxAddress = useCurrentAccountStxAddressState();
+
+  // get bitcoin address from stx address
+  let btcAddress = getBitcoinAddress(stxAddress);
+
+  // TODO: 
+  // Figure out how to get this address' BTC balance. May need to run our own node.
+  //
+  // API is deprecated
+  // fetch("https://blockchain.info/q/addressbalance/" + btcAddress).then((res) => {
+  //   return res.json();
+  // }).then((json) => {
+  //   var btcBalance = parseInt(json, 10);
+  //   console.log(btcBalance);
+  // }).catch((e) => {
+  //   console.log(e);
+  // })
+  let btcBalance = 1.4371;
+  let btcAssets = {
+    address: btcAddress,
+    balance: btcBalance
+  }
+
+  return transformBitcoinAssets(btcAssets);
+} 

@@ -1,7 +1,8 @@
 import { getAssetStringParts, truncateMiddle } from '@stacks/ui-utils';
 import BigNumber from 'bignumber.js';
-import type { Asset } from '@app/common/asset-types';
+import type { Asset, AssetWithMeta } from '@app/common/asset-types';
 import type { AccountBalanceResponseBigNumber } from '@shared/models/account-types';
+import { c32ToB58 } from 'c32check';
 
 export function transformAssets(balances?: AccountBalanceResponseBigNumber) {
   const _assets: Asset[] = [];
@@ -30,4 +31,50 @@ export function transformAssets(balances?: AccountBalanceResponseBigNumber) {
     });
   });
   return _assets;
+}
+
+/**
+ * Convert STX address to BTC address
+ * source: https://github.com/hirosystems/stacks.js/blob/master/packages/cli/src/cli.ts
+ * @param stxAddress 
+ */
+ export const getBitcoinAddress = (stxAddress: string | undefined) => {
+  if (!stxAddress) {
+    return "";
+  }
+
+  const C32_ADDRESS_CHARS = '[0123456789ABCDEFGHJKMNPQRSTVWXYZ]+';
+  const STACKS_ADDRESS_PATTERN = `^(${C32_ADDRESS_CHARS})$`;
+  let b58addr: string;
+
+  if (stxAddress.match(STACKS_ADDRESS_PATTERN)) {
+    b58addr = c32ToB58(stxAddress);
+  } else if (stxAddress.match(/[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+/)) {
+    b58addr = stxAddress;
+  } else {
+    throw new Error(`Unrecognized address ${stxAddress}`)
+  }
+  
+  // console.log('btc: ', b58addr)
+  return b58addr;
+}
+
+/**
+ * 
+ * @param asset 
+ * @returns 
+ */
+export const transformBitcoinAssets = (asset: any) => {
+  // console.log(asset)
+  let btcAssetWithMeta: AssetWithMeta = {
+    name: "Bitcoin",
+    contractAddress: "",
+    contractName: "",
+    subtitle: "BTC",
+    type: "ft",
+    balance: new BigNumber(asset.balance),
+    canTransfer: false,
+    hasMemo: false
+  }
+  return btcAssetWithMeta;
 }

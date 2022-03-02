@@ -40,6 +40,9 @@ export const AssetRow = forwardRef<HTMLDivElement, AssetRowProps>((props, ref) =
           ? 'stx'
           : type === 'ft'
           ? `${formatContractId(contractAddress, contractName)}::${name}`
+          : name === 'btc'
+          ?
+          'btc'
           : name
       }
       title={friendlyName}

@@ -104,6 +104,7 @@ export const AssetItem = memo(
               size="36px"
               gradientString={avatar}
               useStx={caption === 'STX'}
+              useBtc={caption === 'BTC'}
               color="white"
               isUnanchored={isDifferent}
             >

@@ -2,6 +2,7 @@ import { StxIcon } from '@app/components/icons/stx-icon';
 import { MicroblockIcon } from '@app/components/icons/microblock';
 import { BoxProps, Circle, color, DynamicColorCircle } from '@stacks/ui';
 import { TypeIconWrapper } from '@app/components/tx-icon';
+import { BtcIcon } from './icons/btc-icon';
 
 const microIcon = () => (
   <MicroblockIcon
@@ -27,13 +28,24 @@ const StxAvatar = (props: StxAvatarProps) => {
   );
 };
 
+const BtcAvatar = (props: StxAvatarProps) => {
+  return (
+    <Circle position="relative" size="36px" {...props}>
+      <BtcIcon />
+      {iconItem(props.isUnanchored)}
+    </Circle>
+  );
+};
+
 interface AssetProps extends BoxProps {
   gradientString: string;
   useStx: boolean;
+  useBtc: boolean;
   isUnanchored?: boolean;
 }
 export const AssetAvatar = ({
   useStx,
+  useBtc,
   isUnanchored,
   gradientString,
   children,
@@ -41,6 +53,8 @@ export const AssetAvatar = ({
 }: AssetProps) => {
   if (useStx) {
     return <StxAvatar {...props} />;
+  } else if (useBtc) {
+    return <BtcAvatar {...props} />;
   }
   return (
     <DynamicColorCircle {...props} string={gradientString}>
