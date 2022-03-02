@@ -62,7 +62,11 @@ export const Home = () => {
               />
             }
             activity={<ActivityList />}
-            dataList={<DataList />}
+            dataList={
+              <DataList 
+                address={account.address}
+              />
+            }
           />
         )}
       </Stack>
