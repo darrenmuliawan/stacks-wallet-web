@@ -10,13 +10,18 @@ import { useAnalytics } from '@app/common/hooks/analytics/use-analytics';
 interface HomeTabsProps extends StackProps {
   balances: JSX.Element;
   activity: JSX.Element;
-  dataList: JSX.Element;
+  // dataList: JSX.Element;
 }
 
 const ANALYTICS_PATH = ['/balances', '/activity', '/data'];
 
 export function HomeTabs(props: HomeTabsProps) {
-  const { balances, activity, dataList, ...rest } = props;
+  const { 
+    balances, 
+    activity, 
+    // dataList, 
+    ...rest 
+  } = props;
   const analytics = useAnalytics();
 
   const { activeTab, setActiveTab } = useHomeTabs();
@@ -32,7 +37,7 @@ export function HomeTabs(props: HomeTabsProps) {
         tabs={[
           { slug: 'balances', label: 'Balances' },
           { slug: 'activity', label: 'Activity' },
-          { slug: 'data', label: 'Data' }
+          // { slug: 'data', label: 'Data' }
         ]}
         activeTab={activeTab}
         onTabClick={setActiveTabTracked}
@@ -60,7 +65,7 @@ export function HomeTabs(props: HomeTabsProps) {
             </SlideFade>
           </Suspense>
         )}
-        {activeTab === 2 && (
+        {/* {activeTab === 2 && (
           <Suspense fallback={<LoadingSpinner pb="72px" />}>
             <SlideFade in={activeTab === 2}>
               {styles => (
@@ -70,7 +75,7 @@ export function HomeTabs(props: HomeTabsProps) {
               )}
             </SlideFade>
           </Suspense>
-        )}
+        )} */}
       </Flex>
     </Stack>
   );

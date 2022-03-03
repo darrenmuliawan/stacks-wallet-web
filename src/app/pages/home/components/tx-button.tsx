@@ -1,10 +1,34 @@
 import { memo, useCallback, useRef } from 'react';
-import { FiArrowUp, FiPlus } from 'react-icons/fi';
+import { FiArrowUp, FiPlus, FiPackage } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, ButtonProps } from '@stacks/ui';
 
 import { QrCodeIcon } from '@app/components/qr-code-icon';
 import { RouteUrls } from '@shared/route-urls';
+
+export const DataVaultButton = (props: ButtonProps) => {
+  const ref = useRef<HTMLButtonElement | null>(null);
+  
+  return (
+    <Button
+      size="sm"
+      pl="base-tight"
+      pr='base'
+      py='tight'
+      fontSize={2}
+      mode="primary"
+      position='relative'
+      ref={ref}
+      borderRadius='10px'
+      {...props}
+    >
+      <Box as={FiPackage} transform={'unset'} size={'16px'} mr={0} />
+      <Box as="span" ml="extra-tight" fontSize="14px">
+        Data Vault
+      </Box>
+    </Button>
+  )
+}
 
 export const SendTxButton = memo((props: ButtonProps) => {
   const ref = useRef<HTMLButtonElement | null>(null);

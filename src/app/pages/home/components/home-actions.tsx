@@ -3,7 +3,7 @@ import { Stack, StackProps } from '@stacks/ui';
 
 import { BuyButton } from './buy-button';
 import { SendButton } from './send-button';
-import { ReceiveTxButton } from './tx-button';
+import { DataVaultButton, ReceiveTxButton } from './tx-button';
 
 export const HomeActions = (props: StackProps) => {
   return (
@@ -11,7 +11,8 @@ export const HomeActions = (props: StackProps) => {
       <Stack isInline spacing="base-tight" {...props}>
         <SendButton />
         <ReceiveTxButton />
-        <BuyButton />
+        {/* <BuyButton /> */}
+        <DataVaultButton />
       </Stack>
     </Suspense>
   );
