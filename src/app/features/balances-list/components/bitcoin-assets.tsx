@@ -1,11 +1,11 @@
 import { AssetWithMeta } from "@app/common/asset-types";
 import { AssetItem } from "@app/components/asset-item";
-import { AssetRow } from "@app/components/asset-row";
-import { StxIcon } from "@app/components/icons/stx-icon";
 import { useBitcoinTokenState } from "@app/store/assets/asset.hooks";
-import { Circle, color, Stack, StackProps } from "@stacks/ui";
+import { RouteUrls } from "@shared/route-urls";
+import { Stack, StackProps } from "@stacks/ui";
 import BigNumber from "bignumber.js";
-import { forwardRef, Suspense } from "react";
+import { forwardRef, Suspense, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface AssetRowProps extends StackProps {
   asset: AssetWithMeta;
@@ -18,6 +18,9 @@ const BitcoinRow = forwardRef<HTMLDivElement, AssetRowProps>((props, ref) => {
   const amount = valueFromBalance(balance);
   const subAmount = subBalance && valueFromBalance(subBalance);
   const isDifferent = subBalance && !balance.isEqualTo(subBalance);
+  const navigate = useNavigate();
+
+  const navigateToBuyBitcoinPage = useCallback(() => navigate(RouteUrls.BuyBitcoin), [navigate]);
 
   return (
     <AssetItem
@@ -30,6 +33,7 @@ const BitcoinRow = forwardRef<HTMLDivElement, AssetRowProps>((props, ref) => {
       isDifferent={isDifferent}
       name={name}
       data-testid={`asset-${name}`}
+      // onClick={navigateToBuyBitcoinPage}
       {...rest}
     />
   )

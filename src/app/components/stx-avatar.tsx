@@ -40,7 +40,7 @@ const BtcAvatar = (props: StxAvatarProps) => {
 interface AssetProps extends BoxProps {
   gradientString: string;
   useStx: boolean;
-  useBtc: boolean;
+  useBtc?: boolean;
   isUnanchored?: boolean;
 }
 export const AssetAvatar = ({

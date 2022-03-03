@@ -10,6 +10,9 @@ import { FungibleAssets } from './components/fungible-assets';
 import { NoAssets } from './components/no-assets';
 import { BitcoinAssets } from './components/bitcoin-assets';
 import BigNumber from 'bignumber.js';
+import { useCallback } from 'react';
+import { RouteUrls } from '@shared/route-urls';
+import { useNavigate } from 'react-router-dom';
 
 interface BalancesListProps extends StackProps {
   address: string;
@@ -19,6 +22,8 @@ export const BalancesList = ({ address, ...props }: BalancesListProps) => {
   const currentAccount = useCurrentAccount();
   const { data: balances } = useCurrentAccountUnanchoredBalances();
   const bitcoinAssets = useBitcoinTokenState();
+  const navigate = useNavigate();
+  const navigateToBitcoinPage = useCallback(() => navigate(RouteUrls.Bitcoin), [navigate]);
 
   if (!balances) return null;
 
@@ -34,7 +39,7 @@ export const BalancesList = ({ address, ...props }: BalancesListProps) => {
   return (
     <Stack pb="extra-loose" spacing="extra-loose" {...props}>
       {stxToken && stxToken.balance.isGreaterThan(0) && <AssetRow asset={stxToken} />}
-      <BitcoinAssets />
+      <BitcoinAssets onClick={navigateToBitcoinPage} />
       <FungibleAssets />
       <CollectibleAssets spacing="extra-loose" />
     </Stack>

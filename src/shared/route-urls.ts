@@ -19,4 +19,7 @@ export enum RouteUrls {
   ViewSecretKey = '/view-secret-key',
   // Locked wallet route
   Unlock = '/unlock',
+  // Bitcoin wallet
+  Bitcoin = '/bitcoin',
+  BuyBitcoin = '/buy-bitcoin'
 }

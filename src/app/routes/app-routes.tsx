@@ -29,6 +29,9 @@ import { RouteUrls } from '@shared/route-urls';
 
 import { useOnWalletLock } from './hooks/use-on-wallet-lock';
 import { useOnSignOut } from './hooks/use-on-sign-out';
+import { BitcoinAccount } from '@app/pages/btc-account/btc-account';
+import { BuyBtcForm } from '@app/pages/buy-btc/components/buy-btc-form';
+import { BuyBtcFormBase } from '@app/pages/buy-btc/buy-btc';
 
 export function AppRoutes(): JSX.Element | null {
   const { hasRehydratedVault } = useWallet();
@@ -87,6 +90,26 @@ export function AppRoutes(): JSX.Element | null {
           element={
             <AccountGate>
               <AddNetwork />
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.Bitcoin}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <BitcoinAccount />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.BuyBitcoin}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <BuyBtcFormBase />
+              </Suspense>
             </AccountGate>
           }
         />
