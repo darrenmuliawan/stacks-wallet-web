@@ -30,8 +30,11 @@ import { RouteUrls } from '@shared/route-urls';
 import { useOnWalletLock } from './hooks/use-on-wallet-lock';
 import { useOnSignOut } from './hooks/use-on-sign-out';
 import { BitcoinAccount } from '@app/pages/btc-account/btc-account';
-import { BuyBtcForm } from '@app/pages/buy-btc/components/buy-btc-form';
 import { BuyBtcFormBase } from '@app/pages/buy-btc/buy-btc';
+import { MyDataVault } from '@app/pages/data-vault/my-data-vault';
+import { ConnectDataVault } from '@app/pages/data-vault/connect-data-vault';
+import { DataSources } from '@app/pages/data-vault/data-sources-list';
+import { StackData } from '@app/pages/data-vault/stack-data';
 
 export function AppRoutes(): JSX.Element | null {
   const { hasRehydratedVault } = useWallet();
@@ -90,6 +93,46 @@ export function AppRoutes(): JSX.Element | null {
           element={
             <AccountGate>
               <AddNetwork />
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.MyDataVault}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <MyDataVault />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.ConnectData}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <ConnectDataVault />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.DataSources}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <DataSources />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.StackData}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <StackData />
+              </Suspense>
             </AccountGate>
           }
         />

@@ -8,6 +8,8 @@ import { RouteUrls } from '@shared/route-urls';
 
 export const DataVaultButton = (props: ButtonProps) => {
   const ref = useRef<HTMLButtonElement | null>(null);
+  const navigate = useNavigate();
+  const handleClick = useCallback(() => navigate(RouteUrls.MyDataVault), [navigate]);
   
   return (
     <Button
@@ -20,6 +22,7 @@ export const DataVaultButton = (props: ButtonProps) => {
       position='relative'
       ref={ref}
       borderRadius='10px'
+      onClick={handleClick}
       {...props}
     >
       <Box as={FiPackage} transform={'unset'} size={'16px'} mr={0} />
