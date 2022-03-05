@@ -1,16 +1,19 @@
 import { useRouteHeader } from "@app/common/hooks/use-route-header";
+import { BaseDrawer } from "@app/components/drawer";
 import { CENTERED_FULL_PAGE_MAX_WIDTH } from "@app/components/global-styles/full-page-styles";
 import { Header } from "@app/components/header";
+import { SpaceBetween } from "@app/components/space-between";
 import { Switch } from "@app/components/switch";
 import { Caption } from "@app/components/typography";
 import { useCurrentAccount } from "@app/store/accounts/account.hooks";
 import { RouteUrls } from "@shared/route-urls";
-import { Button, Stack, Text } from "@stacks/ui";
-import { Suspense, useState } from "react";
+import { Button, color, Stack, Text } from "@stacks/ui";
+import { Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { CurrentAccount } from "../home/components/account-area";
 import { AccountInfoFetcher, BalanceFetcher } from "../home/components/fetchers";
 import { DataVaultActions } from "./components/data-vault-actions";
+import { useAutoApproveAllSitesCheckedState, useLocationCheckedState, useMyDataVaultSettingsState, usePersonalInfoCheckedState, useShoppingAndInterestsCheckedState } from "./hooks/my-data-vault.hooks";
 
 export const MyDataVault = () => {
   const navigate = useNavigate();
@@ -41,9 +44,12 @@ export const MyDataVault = () => {
 }
 
 const MyDataList = () => {
-  const [personalInfoChecked, setPersonalInfoChecked] = useState(false);
-  const [shoppingInterestsChecked, setShoppingInterestsChecked] = useState(false);
-  const [locationChecked, setLocationChecked] = useState(false);
+  // const [personalInfoChecked, setPersonalInfoChecked] = useState(false);
+  // const [shoppingInterestsChecked, setShoppingInterestsChecked] = useState(false);
+  // const [locationChecked, setLocationChecked] = useState(false);
+  const [personalInfoChecked, setPersonalInfoChecked] = usePersonalInfoCheckedState();
+  const [shoppingInterestsChecked, setShoppingInterestsChecked] = useShoppingAndInterestsCheckedState();
+  const [locationChecked, setLocationChecked] = useLocationCheckedState();
 
   return (
     <Stack
@@ -93,6 +99,9 @@ const MyDataList = () => {
 }
 
 const Footer = () => {
+  const [autoApproveAllSitesChecked, setAutoApproveAllSitesChecked] = useAutoApproveAllSitesCheckedState();
+  const [settingsVisibility, setSettingsVisibility] = useMyDataVaultSettingsState();
+
   return (
     <Stack
       mt="loose"
@@ -119,14 +128,31 @@ const Footer = () => {
           Approve
         </Button>
       </Stack>
-      <Stack mt="tight" isInline justify="space-between" alignItems="center">
-        <Text>
-          Auto approve all sites 
-        </Text>
-        <Stack>
-          <Switch checked={true} onClick={() => {}}/>
-        </Stack>
+      <Stack mt="tight">
+        <Caption
+          _hover={{ cursor: 'pointer', textDecoration: 'underline' }}
+          color={color('brand')}
+          onClick={() => setSettingsVisibility(true)}
+        >
+          Settings
+        </Caption>
       </Stack>
+      <BaseDrawer
+        title="Settings"
+        isShowing={settingsVisibility}
+        onClose={() => setSettingsVisibility(false)}
+      >
+        <SpaceBetween pb="extra-loose" px="loose" spacing="loose">
+          <Stack>
+            <Text>
+              Auto Approve All Sites
+            </Text>
+          </Stack>
+          <Stack>
+            <Switch checked={autoApproveAllSitesChecked} onClick={() => setAutoApproveAllSitesChecked(!autoApproveAllSitesChecked)} />
+          </Stack>
+        </SpaceBetween>
+      </BaseDrawer>
     </Stack>
   )
 }
