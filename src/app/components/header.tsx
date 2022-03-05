@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { color, Flex, FlexProps, IconButton, Stack } from '@stacks/ui';
+import { color, Flex, FlexProps, IconButton, Stack } from '@stacks/ui'
 import { FiMoreHorizontal, FiArrowLeft } from 'react-icons/fi';
 
 import { HiroWalletLogo } from '@app/components/hiro-wallet-logo';
@@ -11,6 +11,7 @@ import { Caption, Title } from '@app/components/typography';
 import { OnboardingSelectors } from '@tests/integration/onboarding.selectors';
 import { RouteUrls } from '@shared/route-urls';
 import { SettingsSelectors } from '@tests/integration/settings.selectors';
+import { TrubitWalletLogo } from './trubit-wallet-logo';
 
 interface HeaderProps extends FlexProps {
   onClose?: () => void;
@@ -55,7 +56,7 @@ export const Header: React.FC<HeaderProps> = memo(props => {
           isInline
           justifyContent={onClose ? 'center' : 'unset'}
         >
-          <HiroWalletLogo
+          <TrubitWalletLogo
             data-testid={OnboardingSelectors.HiroWalletLogoRouteToHome}
             onClick={() => navigate(RouteUrls.Home)}
           />
