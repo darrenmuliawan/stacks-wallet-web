@@ -8,17 +8,24 @@ import { Caption } from "@app/components/typography";
 import { useCurrentAccount } from "@app/store/accounts/account.hooks";
 import { RouteUrls } from "@shared/route-urls";
 import { Button, color, Stack, Text } from "@stacks/ui";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CurrentAccount } from "../home/components/account-area";
 import { AccountInfoFetcher, BalanceFetcher } from "../home/components/fetchers";
 import { DataVaultActions } from "./components/data-vault-actions";
 import { useAutoApproveAllSitesCheckedState, useLocationCheckedState, useMyDataVaultSettingsState, usePersonalInfoCheckedState, useShoppingAndInterestsCheckedState } from "./hooks/my-data-vault.hooks";
+import { useCurrentPageState } from "./hooks/data-vault.hooks";
+import { DATA_VAULT_PAGE_ENUM } from "./store/data-vault.store";
 
 export const MyDataVault = () => {
   const navigate = useNavigate();
   useRouteHeader(<Header title="Data Vault" onClose={() => navigate(RouteUrls.Home)} />)
   const account = useCurrentAccount();
+  const [_, setPage] = useCurrentPageState();
+
+  useEffect(() => {
+    setPage(DATA_VAULT_PAGE_ENUM.MyData)
+  }, [])
 
   return (
     <>
@@ -44,9 +51,6 @@ export const MyDataVault = () => {
 }
 
 const MyDataList = () => {
-  // const [personalInfoChecked, setPersonalInfoChecked] = useState(false);
-  // const [shoppingInterestsChecked, setShoppingInterestsChecked] = useState(false);
-  // const [locationChecked, setLocationChecked] = useState(false);
   const [personalInfoChecked, setPersonalInfoChecked] = usePersonalInfoCheckedState();
   const [shoppingInterestsChecked, setShoppingInterestsChecked] = useShoppingAndInterestsCheckedState();
   const [locationChecked, setLocationChecked] = useLocationCheckedState();

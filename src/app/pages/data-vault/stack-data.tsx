@@ -8,15 +8,21 @@ import { CurrentAccount } from "../home/components/account-area";
 import { AccountInfoFetcher, BalanceFetcher } from "../home/components/fetchers";
 import { CENTERED_FULL_PAGE_MAX_WIDTH } from "@app/components/global-styles/full-page-styles";
 import { DataVaultActions } from "./components/data-vault-actions";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Caption } from "@app/components/typography";
 import { SpaceBetween } from "@app/components/space-between";
-import { useDataVaultState } from "./hooks/use-data-vault-state";
+import { useCurrentPageState } from "./hooks/data-vault.hooks";
+import { DATA_VAULT_PAGE_ENUM } from "./store/data-vault.store";
 
 export const StackData = () => {
   const navigate = useNavigate();
   useRouteHeader(<Header title="Stack Data" onClose={() => navigate(RouteUrls.MyDataVault)}/>)
   const account = useCurrentAccount();
+  const [_, setPage] = useCurrentPageState();
+
+  useEffect(() => {
+    setPage(DATA_VAULT_PAGE_ENUM.StackData);
+  }, [])
 
   return (
     <>

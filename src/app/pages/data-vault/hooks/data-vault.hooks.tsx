@@ -1,6 +1,6 @@
 import { atom, useAtom } from "jotai"
 import { useAtomValue } from "jotai/utils"
-import { selectedPage } from "../store/data-vault-store";
+import { selectedPage } from "../store/data-vault.store";
 
 
 export const useCurrentPageState = () => {

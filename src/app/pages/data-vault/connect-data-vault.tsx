@@ -9,17 +9,24 @@ import { DataList } from "@app/features/data-list/data-list";
 import { useCurrentAccount } from "@app/store/accounts/account.hooks";
 import { RouteUrls } from "@shared/route-urls";
 import { Button, ChevronIcon, color, Stack, Text } from "@stacks/ui";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CurrentAccount } from "../home/components/account-area";
 import { AccountInfoFetcher, BalanceFetcher } from "../home/components/fetchers";
 import { DataVaultActions } from "./components/data-vault-actions";
+import { useAutoApproveAllSitesCheckedState, useConnectDataVaultSettingsVisibilityState } from "./hooks/connect-data-vault.hooks";
+import { useCurrentPageState } from "./hooks/data-vault.hooks";
+import { DATA_VAULT_PAGE_ENUM } from "./store/data-vault.store";
 
 export const ConnectDataVault = () => {
   const navigate = useNavigate();
   useRouteHeader(<Header title="Data Vault" onClose={() => navigate(RouteUrls.Home)}/>)
   const account = useCurrentAccount();
-  const [isSettingsShowing, setIsSettingsShowing] = useState(false);
+  const [_, setPage] = useCurrentPageState();
+
+  useEffect(() => {
+    setPage(DATA_VAULT_PAGE_ENUM.ConnectData)
+  }, [])
 
   return (
     <>
@@ -38,24 +45,8 @@ export const ConnectDataVault = () => {
         <CurrentAccount />
         <DataVaultActions />
         <ConnectDataList />
-        <Footer onSettingsClick={() => setIsSettingsShowing(true)}/>
+        <Footer />
       </Stack>
-      <BaseDrawer
-        title="Settings"
-        isShowing={isSettingsShowing}
-        onClose={() => setIsSettingsShowing(false)}
-      >
-        <SpaceBetween pb="extra-loose" px="loose" spacing="loose">
-          <Stack>
-            <Text>
-              Auto Approve All Sites
-            </Text>
-          </Stack>
-          <Stack>
-            <Switch checked={true} onClick={() => {}} />
-          </Stack>
-        </SpaceBetween>
-      </BaseDrawer>
     </>
   )
 } 
@@ -101,9 +92,10 @@ const ConnectDataList = () => {
   )
 }
 
-const Footer = (props: any) => {
-  const { onSettingsClick } = props;
-
+const Footer = () => {
+  const [settingsVisibility, setSettingsVisibility] = useConnectDataVaultSettingsVisibilityState();
+  const [autoApproveAllSitesChecked, setAutoApproveAllSitesChecked] = useAutoApproveAllSitesCheckedState();
+  
   return (
     <Stack>
       <Stack isInline justify="space-between" alignItems="center">
@@ -129,11 +121,27 @@ const Footer = (props: any) => {
         <Caption
           _hover={{ cursor: 'pointer', textDecoration: 'underline' }}
           color={color('brand')}
-          onClick={onSettingsClick}
+          onClick={() => setSettingsVisibility(true)}
         >
           Settings
         </Caption>
       </Stack>
+      <BaseDrawer
+        title="Settings"
+        isShowing={settingsVisibility}
+        onClose={() => setSettingsVisibility(false)}
+      >
+        <SpaceBetween pb="extra-loose" px="loose" spacing="loose">
+          <Stack>
+            <Text>
+              Auto Approve All Sites
+            </Text>
+          </Stack>
+          <Stack>
+            <Switch checked={autoApproveAllSitesChecked} onClick={() => setAutoApproveAllSitesChecked(!autoApproveAllSitesChecked)} />
+          </Stack>
+        </SpaceBetween>
+      </BaseDrawer>
     </Stack>
   )
 }

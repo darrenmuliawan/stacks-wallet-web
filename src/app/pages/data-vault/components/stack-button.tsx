@@ -3,8 +3,8 @@ import { Box, Button, ButtonProps } from "@stacks/ui";
 import { useRef } from "react";
 import { FiDollarSign } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import { useCurrentPageState } from "../hooks/use-data-vault-state";
-import { DATA_VAULT_PAGE_ENUM } from "../store/data-vault-store";
+import { useCurrentPageState } from "../hooks/data-vault.hooks";
+import { DATA_VAULT_PAGE_ENUM } from "../store/data-vault.store";
 
 export const StackButton = (props: ButtonProps) => {
   const ref = useRef<HTMLButtonElement | null>(null);
