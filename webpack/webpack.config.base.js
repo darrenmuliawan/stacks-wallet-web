@@ -43,7 +43,7 @@ const smp = new SpeedMeasurePlugin({
   granularLoaderData: true,
 });
 
-const APP_TITLE = 'Hiro Wallet';
+const APP_TITLE = 'TRUBIT Wallet';
 
 const HTML_OPTIONS = {
   inject: 'body',

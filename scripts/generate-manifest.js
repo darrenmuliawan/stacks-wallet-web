@@ -12,6 +12,14 @@ function generateImageAssetUrlsWithSuffix(suffix) {
   };
 }
 
+const generateImageAssetUrls = () => {
+  return {
+    128: 'assets/trubit-logo/logo-only-black.png',
+    256: 'assets/trubit-logo/logo-only-black.png',
+    512: 'assets/trubit-logo/logo-only-black.png',
+  }
+}
+
 const manifest = {
   author: 'Hiro PBC',
   description:
@@ -54,16 +62,16 @@ const manifest = {
 };
 
 const devManifest = {
-  name: 'Hiro Wallet Dev',
+  name: 'TRUBIT Wallet Dev',
   content_security_policy:
     "script-src 'self' 'unsafe-eval'; object-src 'self'; frame-src 'none'; frame-ancestors 'none';",
-  icons: generateImageAssetUrlsWithSuffix('-dev'),
+  icons: generateImageAssetUrls(),
   browser_action: {
-    default_icon: 'assets/connect-logo/Stacks128w-dev.png',
+    default_icon: 'assets/trubit-logo/logo-only-color.png',
   },
 };
 
-const name = PREVIEW_RELEASE ? 'Hiro Wallet Preview' : 'Hiro Wallet';
+const name = PREVIEW_RELEASE ? 'TRUBIT Wallet Preview' : 'TRUBIT Wallet';
 
 const prodManifest = {
   name,
@@ -71,9 +79,9 @@ const prodManifest = {
   // https://bugs.chromium.org/p/chromium/issues/detail?id=1268576
   content_security_policy:
     "default-src 'none'; connect-src *; style-src 'unsafe-inline'; img-src 'self' https:; script-src 'self' 'wasm-eval'; object-src 'none'; frame-src 'none'; frame-ancestors 'none';",
-  icons: generateImageAssetUrlsWithSuffix(PREVIEW_RELEASE ? '-preview' : ''),
+  icons: generateImageAssetUrls(),
   browser_action: {
-    default_icon: `assets/connect-logo/Stacks128w${PREVIEW_RELEASE ? '-preview' : ''}.png`,
+    default_icon: 'assets/trubit-logo/logo-only-black.png',
   },
 };
 
