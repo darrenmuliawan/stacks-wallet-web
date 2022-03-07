@@ -17,7 +17,10 @@ import { BalanceFetcher, AccountInfoFetcher } from "../home/components/fetchers"
 import { DataVaultActions } from "./components/data-vault-actions";
 import { useCurrentPageState } from "./hooks/data-vault.hooks";
 import { DATA_VAULT_PAGE_ENUM } from "./store/data-vault.store";
-import { getDataSourcesListState } from "./hooks/data-sources.hooks";
+import { getDataSourcesListState, useConfirmationDialogButtonTitleState, useConfirmationDialogCurrentDataSourceState, useConfirmationDialogMessageState, useConfirmationDialogTitleState, useConfirmationDialogVisibilityState } from "./hooks/data-sources.hooks";
+import { BaseDrawer } from "@app/components/drawer";
+import { confirmationDialogConfirmCallback } from "./hooks/data-sources.hooks";
+import { useAtom } from "jotai";
 
 export const DataSources = () => {
   const navigate = useNavigate();
@@ -47,24 +50,13 @@ export const DataSources = () => {
         <DataVaultActions />
         <DataSourcesList />
         <Footer />
+        <ConfirmationDialog />
       </Stack>
     </>
   )
 }
 
 const DataSourcesList = () => {
-  // const example_data = [
-  //   { name: 'facebook', connected: true },
-  //   { name: 'twitter', connected: true },
-  //   { name: 'google', connected: true },
-  //   { name: 'instagram', connected: true },
-  //   { name: 'linkedin', connected: true },
-  //   { name: 'reddit', connected: true },
-  //   { name: 'tiktok', connected: false },
-  //   { name: 'apple', connected: false },
-  //   { name: 'amazon', connected: true },
-  //   { name: 'snapchat', connected: false },
-  // ]
   const data = getDataSourcesListState();
 
   return (
@@ -75,7 +67,7 @@ const DataSourcesList = () => {
             title={d.name} 
             connected={d.connected} 
             onClick={d.onClick}
-            key={`${d.name}.${i}`}
+            _key={`${d.name}.${i}`}
           />
         )
       }
@@ -87,11 +79,11 @@ interface DataSourceRowProps extends BoxProps {
   title: string;
   connected: boolean;
   onClick: () => void;
-  key: string
+  _key: string;
 }
 
 const DataSourceRow = (props: DataSourceRowProps) => {
-  const { title, connected, onClick, key } = props;
+  const { title, connected, onClick, _key } = props;
 
   return (
     <Box
@@ -101,10 +93,11 @@ const DataSourceRow = (props: DataSourceRowProps) => {
       outline={0}
       position="relative"
       flexGrow={1}
+      key={_key}
     >
       <Stack pt="tight" flexGrow={1} width="100%" isInline spacing="base" alignItems="center">
         <DynamicColorCircle
-          string={`${title}.${key}`}
+          string={`${title}.${_key}`}
         >
           {getDataSourceIcon(title)}
         </DynamicColorCircle>
@@ -120,25 +113,25 @@ const DataSourceRow = (props: DataSourceRowProps) => {
 }
 
 const getDataSourceIcon = (name: string) => {
-  if (name === 'facebook') {
+  if (name === 'Facebook') {
     return <FaFacebookF size={25} color="white" />
-  } else if (name === 'twitter') {
+  } else if (name === 'Twitter') {
     return <BsTwitter size={25} color="white" />
-  } else if (name === 'google') {
+  } else if (name === 'Google') {
     return <BsGoogle size={25} color="white" />
-  } else if (name === 'instagram') {
+  } else if (name === 'Instagram') {
     return <FiInstagram size={25} color="white" />
-  } else if (name === 'linkedin') {
+  } else if (name === 'LinkedIn') {
     return <FaLinkedinIn size={25} color="white" />
-  } else if (name === 'reddit') {
+  } else if (name === 'Reddit') {
     return <FaRedditAlien size={25} color="white" />
-  } else if (name === 'tiktok') {
+  } else if (name === 'Tiktok') {
     return <FaTiktok size={25} color="white" />
-  } else if (name === 'apple') {
+  } else if (name === 'Apple') {
     return <FaApple size={25} color="white" />
-  } else if (name === 'amazon') {
+  } else if (name === 'Amazon') {
     return <FaAmazon size={25} color="white" />
-  } else if (name === 'snapchat') {
+  } else if (name === 'Snapchat') {
     return <GrSnapchat size={25} color="white" />
   } else {
     return <></>
@@ -159,5 +152,37 @@ const Footer = (props: any) => {
         Upload Data
       </Button>
     </Stack>
+  )
+}
+
+const ConfirmationDialog = () => {
+  const [confirmationDialogVisibility, setConfirmationDialogVisibility] = useConfirmationDialogVisibilityState();
+  const [confirmationDialogTitle, ] = useConfirmationDialogTitleState();
+  const [confirmationDialogMessage, ] = useConfirmationDialogMessageState();
+  const [confirmationDialogButtonTitle, ] = useConfirmationDialogButtonTitleState();
+  const [confirmationDialogCurrentDataSource, ] = useConfirmationDialogCurrentDataSourceState();
+  const [, confirmCallback] = useAtom(confirmationDialogConfirmCallback);
+
+  return (
+    <BaseDrawer
+      title={confirmationDialogTitle}
+      isShowing={confirmationDialogVisibility}
+      onClose={() => setConfirmationDialogVisibility(false)}
+    >
+      <Stack pb="extra-loose" px="loose" spacing="loose">
+        <Text>
+          {confirmationDialogMessage}
+        </Text>
+        <Button
+          size="md"
+          fontSize={2}
+          borderRadius="30px"
+          width="100%"
+          onClick={() => confirmCallback(confirmationDialogCurrentDataSource)}
+        >
+          {confirmationDialogButtonTitle}
+        </Button>
+      </Stack>
+    </BaseDrawer>
   )
 }

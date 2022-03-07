@@ -1,32 +1,40 @@
 import { atom } from 'jotai';
 
+// data sources connection
 export const facebookDataConnection = atom({
-  name: 'facebook', connected: false
+  name: 'Facebook', connected: false
 })
 export const twitterDataConnection = atom({
-  name: 'twitter', connected: true
+  name: 'Twitter', connected: true
 })
 export const googleDataConnection = atom({
-  name: 'google', connected: true
+  name: 'Google', connected: true
 })
 export const instagramDataConnection = atom({
-  name: 'instagram', connected: true
+  name: 'Instagram', connected: true
 })
 export const linkedinDataConnection = atom({
-  name: 'linkedin', connected: true
+  name: 'LinkedIn', connected: true
 })
 export const redditDataConnection = atom({
-  name: 'reddit', connected: true
+  name: 'Reddit', connected: true
 })
 export const tiktokDataConnection = atom({
-  name: 'tiktok', connected: true
+  name: 'Tiktok', connected: true
 })
 export const appleDataConnection = atom({
-  name: 'apple', connected: true
+  name: 'Apple', connected: true
 })
 export const amazonDataConnection = atom({
-  name: 'amazon', connected: true
+  name: 'Amazon', connected: true
 })
 export const snapchatDataConnection = atom({
-  name: 'snapchat', connected: true
+  name: 'Snapchat', connected: true
 })
+
+// confirmation dialog
+export const confirmationDialogVisibility = atom(false);
+export const confirmationDialogTitle = atom('');
+export const confirmationDialogMessage = atom('');
+export const confirmationDialogButtonTitle = atom('');
+export const confirmationDialogCurrentDataSource = atom('');
