@@ -33,8 +33,14 @@ import { BitcoinAccount } from '@app/pages/btc-account/btc-account';
 import { BuyBtcFormBase } from '@app/pages/buy-btc/buy-btc';
 import { MyDataVault } from '@app/pages/data-vault/my-data-vault';
 import { ConnectDataVault } from '@app/pages/data-vault/connect-data-vault';
-import { DataSources } from '@app/pages/data-vault/data-sources-list';
+import { DataSources } from '@app/pages/data-sources/data-sources-list';
 import { StackData } from '@app/pages/data-vault/stack-data';
+import { FacebookDataCategories } from '@app/pages/data-sources/components/facebook/facebook-data-categories';
+import { AdsInterests } from '@app/pages/data-sources/components/ads-interests';
+import { AdsYouInteractedWith } from '@app/pages/data-sources/components/ads-you-interacted-with';
+import { PagesYouLiked } from '@app/pages/data-sources/components/pages-you-liked';
+import { ProfileInformation } from '@app/pages/data-sources/components/profile-information';
+import { LocationInformation } from '@app/pages/data-sources/components/location-information';
 
 export function AppRoutes(): JSX.Element | null {
   const { hasRehydratedVault } = useWallet();
@@ -122,6 +128,66 @@ export function AppRoutes(): JSX.Element | null {
             <AccountGate>
               <Suspense fallback={<></>}>
                 <DataSources />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.FacebookData}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <FacebookDataCategories />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.AdsInterests}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <AdsInterests />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.AdsYouInteractedWith}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <AdsYouInteractedWith />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.PagesYouLiked}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <PagesYouLiked />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.ProfileInformation}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <ProfileInformation />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.LocationInformation}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <LocationInformation />
               </Suspense>
             </AccountGate>
           }

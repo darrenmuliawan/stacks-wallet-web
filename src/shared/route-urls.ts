@@ -25,6 +25,13 @@ export enum RouteUrls {
   // Data management
   MyDataVault = '/my-data',
   ConnectData = '/connect-data',
+  StackData = '/stack-data',
+  // Data sources
   DataSources = '/data-sources',
-  StackData = '/stack-data'
+  FacebookData = '/fb-data',
+  AdsInterests = '/ads-interests',
+  AdsYouInteractedWith = '/ads-you-interacted-with',
+  PagesYouLiked = '/pages-you-liked',
+  ProfileInformation = '/profile-information',
+  LocationInformation = '/location-information',
 }
