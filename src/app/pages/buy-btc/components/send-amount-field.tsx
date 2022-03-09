@@ -10,15 +10,17 @@ import { SendMaxButton } from "./send-max-button";
 interface AmountFieldProps extends StackProps {
   error?: string;
   value: number | string;
+  onValueChange: (value: string) => any;
   minValue: number | string;
   maxValue: number | string;
+  unit: string;
 }
 
 const SendAmountFieldBase = (props: AmountFieldProps) => {
-  const { error, value, minValue, maxValue, ...rest } = props;
+  const { error, value, minValue, maxValue, unit, onValueChange, ...rest } = props;
   const account = useCurrentAccount()
   const stxBalance = useStxTokenState(account ? account.address : "");
-  const placeholder = "0.000000 STX";
+  const placeholder = `0.000000 ${unit}`;
   const title = "You send"
 
   return (
@@ -39,6 +41,7 @@ const SendAmountFieldBase = (props: AmountFieldProps) => {
             value={value === 0 ? '' : value}
             autoComplete="off"
             name="amount"
+            onChange={(e) => onValueChange(e.target.value)}
             // data-testid=""
           />
           <SendMaxButton
@@ -55,8 +58,8 @@ const SendAmountFieldBase = (props: AmountFieldProps) => {
         )
       }
       <Stack mt="base-tight" justify="space-between" alignItems="center" isInline>
-        <Caption>Min: {minValue} STX</Caption>
-        <Caption>Max: {maxValue} STX</Caption>
+        <Caption>Min: {minValue} {unit}</Caption>
+        <Caption>Max: {maxValue} {unit}</Caption>
       </Stack>
     </Stack>
   )

@@ -38,7 +38,7 @@ export const ReceiveTxButton: React.FC<ButtonProps> = memo(({ ...rest }) => {
   const ref = useRef<HTMLButtonElement | null>(null);
   const navigate = useNavigate();
 
-  const handleClick = useCallback(() => navigate(RouteUrls.Receive), [navigate]);
+  const handleClick = useCallback(() => navigate(RouteUrls.ReceiveBitcoin), [navigate]);
   return (
     <Button
       size="sm"

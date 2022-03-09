@@ -23,7 +23,7 @@ import { BitcoinAssets } from "@app/features/balances-list/components/bitcoin-as
 import { useStxTokenState } from "@app/store/assets/asset.hooks";
 import { AssetRow } from "@app/components/asset-row";
 
-const AccountAddress = memo((props: StackProps) => {
+export const AccountAddress = memo((props: StackProps) => {
   const currentAccount = useCurrentAccount();
   const { onCopy, hasCopied } = useClipboard(getBitcoinAddress(currentAccount?.address) || '');
   const analytics = useAnalytics();

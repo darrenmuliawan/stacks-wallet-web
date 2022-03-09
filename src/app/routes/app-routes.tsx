@@ -41,6 +41,7 @@ import { AdsYouInteractedWith } from '@app/pages/data-sources/components/ads-you
 import { PagesYouLiked } from '@app/pages/data-sources/components/pages-you-liked';
 import { ProfileInformation } from '@app/pages/data-sources/components/profile-information';
 import { LocationInformation } from '@app/pages/data-sources/components/location-information';
+import { ReceiveBitcoin } from '@app/pages/btc-account/components/receive-btc';
 
 export function AppRoutes(): JSX.Element | null {
   const { hasRehydratedVault } = useWallet();
@@ -218,6 +219,16 @@ export function AppRoutes(): JSX.Element | null {
             <AccountGate>
               <Suspense fallback={<></>}>
                 <BuyBtcFormBase />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.ReceiveBitcoin}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <ReceiveBitcoin />
               </Suspense>
             </AccountGate>
           }

@@ -12,7 +12,7 @@ export const BuyBtcFormBase = () =>  {
   const maxAmount = 500;
   const fee = 4.5;
   const rate = 0.00003;
-  useRouteHeader(<Header title="Buy Bitcoin" onClose={() => navigate(RouteUrls.Bitcoin)} />);
+  useRouteHeader(<Header title="Swap STX/BTC" onClose={() => navigate(RouteUrls.Bitcoin)} />);
 
   const initialValues = {
     amount: '',

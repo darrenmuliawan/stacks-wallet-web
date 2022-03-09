@@ -33,6 +33,7 @@ const BitcoinRow = forwardRef<HTMLDivElement, AssetRowProps>((props, ref) => {
       isDifferent={isDifferent}
       name={name}
       data-testid={`asset-${name}`}
+      _hover={{ cursor: 'pointer' }}
       // onClick={navigateToBuyBitcoinPage}
       {...rest}
     />

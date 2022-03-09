@@ -1,3 +1,4 @@
+import { SpaceBetween } from "@app/components/space-between";
 import { Caption } from "@app/components/typography";
 import { Box, color, Stack, StackProps, Text } from "@stacks/ui";
 
@@ -6,10 +7,12 @@ interface ReceiveAmountFieldProps extends StackProps {
   fee: number;
   feeRate: number;
   rate: number;
+  unit: string;
+  receiveUnit: string;
 }
 
 export const ReceiveAmountField = (props: ReceiveAmountFieldProps) => {
-  const { value, fee, feeRate, rate, ...rest } = props;
+  const { value, fee, feeRate, rate, unit, receiveUnit, ...rest } = props;
   const title = "You receive";
 
   return (
@@ -27,11 +30,14 @@ export const ReceiveAmountField = (props: ReceiveAmountFieldProps) => {
           borderColor={color('border')}
           userSelect="none"
         >
-          <Text>{value} BTC</Text>
+          <SpaceBetween>
+            <Text>{value === '' ? 0 : value}</Text>
+            <Text>{receiveUnit}</Text>
+          </SpaceBetween>
         </Box>
       </Stack>
       <Stack mt="base-tight" justify="space-between" alignItems="center" isInline>
-        <Caption>Current fee: {fee} STX ({feeRate}%)</Caption>
+        <Caption>Current fee: {fee} {unit} ({feeRate}%)</Caption>
         <Caption>Rate: {rate}</Caption>
       </Stack>
     </Stack>
