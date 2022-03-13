@@ -22,6 +22,8 @@ import { DataList } from "@app/features/data-list/data-list";
 import { BitcoinAssets } from "@app/features/balances-list/components/bitcoin-assets";
 import { useStxTokenState } from "@app/store/assets/asset.hooks";
 import { AssetRow } from "@app/components/asset-row";
+import { BtcAccountTabs } from "./components/btc-account-tabs";
+import { BtcActivityList } from "./components/btc-activity-list";
 
 export const AccountAddress = memo((props: StackProps) => {
   const currentAccount = useCurrentAccount();
@@ -80,8 +82,15 @@ export const BitcoinAccount = () => {
           </Stack>
         </Stack>
         <BitcoinAccountActions />
-        <BitcoinAssets />
-        <AssetRow asset={stxToken}/>
+        <BtcAccountTabs
+          balances={
+            <Stack spacing="loose">
+              <BitcoinAssets />
+              <AssetRow asset={stxToken}/>
+            </Stack>
+          }
+          activity={<BtcActivityList />}
+        />
       </Stack>
     </>
   )

@@ -42,6 +42,8 @@ import { PagesYouLiked } from '@app/pages/data-sources/components/pages-you-like
 import { ProfileInformation } from '@app/pages/data-sources/components/profile-information';
 import { LocationInformation } from '@app/pages/data-sources/components/location-information';
 import { ReceiveBitcoin } from '@app/pages/btc-account/components/receive-btc';
+import { InsertAddress } from '@app/pages/buy-btc/insert-address';
+import { SendSwapTransaction } from '@app/pages/buy-btc/send-swap-transaction';
 
 export function AppRoutes(): JSX.Element | null {
   const { hasRehydratedVault } = useWallet();
@@ -239,6 +241,26 @@ export function AppRoutes(): JSX.Element | null {
             <AccountGate>
               <Suspense fallback={<></>}>
                 <BuyPage />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.InsertAddress}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <InsertAddress />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.SendSwapTx}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <SendSwapTransaction />
               </Suspense>
             </AccountGate>
           }

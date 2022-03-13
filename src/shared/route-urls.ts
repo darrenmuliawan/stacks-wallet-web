@@ -23,6 +23,9 @@ export enum RouteUrls {
   Bitcoin = '/bitcoin',
   BuyBitcoin = '/buy-bitcoin',
   ReceiveBitcoin = '/receive-bitcoin',
+  // Swap Bitcoin
+  InsertAddress = '/insert-address',
+  SendSwapTx = '/send-swap-tx',
   // Data management
   MyDataVault = '/my-data',
   ConnectData = '/connect-data',

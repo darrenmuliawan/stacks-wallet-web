@@ -1,27 +1,31 @@
 import { ErrorLabel } from "@app/components/error-label";
+import { SpaceBetween } from "@app/components/space-between";
+import { AssetAvatar } from "@app/components/stx-avatar";
 import { Caption } from "@app/components/typography";
 import { useCurrentAccount } from "@app/store/accounts/account.hooks";
 import { useAssets, useStxTokenState } from "@app/store/assets/asset.hooks";
-import { Box, Input, InputGroup, Stack, StackProps, Text } from "@stacks/ui";
+import { Box, color, Input, InputGroup, Stack, StackProps, Text } from "@stacks/ui";
 import { SendFormSelectors } from "@tests/page-objects/send-form.selectors";
 import { memo } from "react";
+import { useLimitsState, useReceiveTokenState, useSendTokenState, useSendValueState } from "../hooks/swap-btc.hooks";
+import { formatMaxValue, formatMinValue, getPairName } from "../utils/utils";
 import { SendMaxButton } from "./send-max-button";
 
 interface AmountFieldProps extends StackProps {
   error?: string;
-  value: number | string;
   onValueChange: (value: string) => any;
-  minValue: number | string;
-  maxValue: number | string;
-  unit: string;
 }
 
 const SendAmountFieldBase = (props: AmountFieldProps) => {
-  const { error, value, minValue, maxValue, unit, onValueChange, ...rest } = props;
+  const { error, onValueChange, ...rest } = props;
   const account = useCurrentAccount()
+  const [sendToken, ] = useSendTokenState();
+  const [receiveToken, ] = useReceiveTokenState();
+  const [sendValue, ] = useSendValueState();
   const stxBalance = useStxTokenState(account ? account.address : "");
-  const placeholder = `0.000000 ${unit}`;
+  const placeholder = `0.000000 ${sendToken}`;
   const title = "You send"
+  const [limits, ] = useLimitsState();
 
   return (
     <Stack {...rest}>
@@ -29,6 +33,40 @@ const SendAmountFieldBase = (props: AmountFieldProps) => {
         <Text as="label" display="block" mb="tight" fontSize={1} fontWeight="500" htmlFor="amount">
           {title}
         </Text>
+        <Box
+          width="100%"
+          px="base"
+          py="base-tight"
+          borderRadius="8px"
+          border="1px solid"
+          borderColor={color('border')}
+          userSelect="none"
+          mb="tight"
+        >
+          <SpaceBetween>
+            <Stack spacing="base" alignItems="center" justifyContent="center" isInline>
+              <AssetAvatar
+                useStx={sendToken === 'STX'}
+                useBtc={sendToken === 'BTC'}
+                gradientString=""
+                mr="tight"
+                size="36px"
+                color="white"
+              />
+              <Stack flexGrow={1}>
+                <Text
+                  display="block"
+                  fontWeight="400"
+                  fontSize={2}
+                  color="ink.1000"
+                >
+                  {getPairName(sendToken)}
+                </Text>
+                <Caption>{sendToken}</Caption>
+              </Stack>
+            </Stack>
+          </SpaceBetween>
+        </Box>
         <Box position="relative">
           <Input
             display="block"
@@ -38,16 +76,16 @@ const SendAmountFieldBase = (props: AmountFieldProps) => {
             placeholder={placeholder}
             min="0"
             autoFocus={false}
-            value={value === 0 ? '' : value}
+            value={sendValue}
             autoComplete="off"
             name="amount"
-            onChange={(e) => onValueChange(e.target.value)}
+            onChange={(e) => onValueChange((e.target as HTMLInputElement).value)}
             // data-testid=""
           />
-          <SendMaxButton
+          {/* <SendMaxButton
             fee={0}
             onClick={() => {}}
-          />
+          /> */}
         </Box>
       </InputGroup>
       {
@@ -58,8 +96,8 @@ const SendAmountFieldBase = (props: AmountFieldProps) => {
         )
       }
       <Stack mt="base-tight" justify="space-between" alignItems="center" isInline>
-        <Caption>Min: {minValue} {unit}</Caption>
-        <Caption>Max: {maxValue} {unit}</Caption>
+        <Caption>Min: {formatMinValue(limits, sendToken, receiveToken)} {sendToken}</Caption>
+        <Caption>Max: {formatMaxValue(limits, sendToken, receiveToken)} {sendToken}</Caption>
       </Stack>
     </Stack>
   )

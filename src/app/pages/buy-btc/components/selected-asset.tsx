@@ -8,42 +8,25 @@ import { useState } from "react"
 import { AiOutlineSwap } from 'react-icons/ai';
 
 interface SelectedAssetProps {
-  firstPair: string;
-  secondPair: string;
+  sendToken: string;
+  receiveToken: string;
   swapPair: () => any;
   getName: (name: string) => any;
 }
 
 export const SelectedAsset = (props: SelectedAssetProps) => {
-  const { firstPair, secondPair, swapPair, getName } = props;
+  const { sendToken, receiveToken, swapPair, getName } = props;
 
   const account = useCurrentAccount();
   const stxToken = useStxTokenState(account ? account.address : '');
   const btcToken = useBitcoinTokenState();
-  // const [firstPair, setFirstPair] = useState('STX');
-  // const [secondPair, setSecondPair] = useState('BTC');
-
-  // const getName = (name: string) => {
-  //   if (name === 'STX') return "Stacks";
-  //   return "Bitcoin"
-  // }
-
-  // const swapPair = () => {
-  //   if (firstPair === 'STX') {
-  //     setFirstPair("BTC");
-  //     setSecondPair("STX");
-  //   } else {
-  //     setFirstPair("STX");
-  //     setSecondPair("BTC");
-  //   }
-  // }
 
   return (
     <Stack spacing="base-loose" flexDirection="column">
       <Stack spacing="tight">
         <Stack isInline>
           <Text display="block" fontSize={1} fontWeight="500" mb="tight">
-            Swap {firstPair} to {secondPair} 
+            Swap {sendToken} to {receiveToken} 
           </Text>
           <AiOutlineSwap opacity={0.7} style={{ cursor: 'pointer', marginLeft: '5px' }} onClick={swapPair}/>
         </Stack>
@@ -61,8 +44,8 @@ export const SelectedAsset = (props: SelectedAssetProps) => {
           <SpaceBetween>
             <Stack spacing="base" alignItems="center" justifyContent="center" isInline>
               <AssetAvatar
-                useStx={firstPair === 'STX'}
-                useBtc={firstPair === 'BTC'}
+                useStx={sendToken === 'STX'}
+                useBtc={sendToken === 'BTC'}
                 gradientString=""
                 mr="tight"
                 size="36px"
@@ -75,9 +58,9 @@ export const SelectedAsset = (props: SelectedAssetProps) => {
                   fontSize={2}
                   color="ink.1000"
                 >
-                  {getName(firstPair)}
+                  {getName(sendToken)}
                 </Text>
-                <Caption>{firstPair}</Caption>
+                <Caption>{sendToken}</Caption>
               </Stack>
             </Stack>
             <Stack>
@@ -89,8 +72,8 @@ export const SelectedAsset = (props: SelectedAssetProps) => {
             </Stack>
             <Stack spacing="base" display="flex" alignItems="center" justifyContent="center" isInline>
               <AssetAvatar
-                useStx={secondPair === 'STX'}
-                useBtc={secondPair === 'BTC'}
+                useStx={receiveToken === 'STX'}
+                useBtc={receiveToken === 'BTC'}
                 gradientString=""
                 mr="tight"
                 size="36px"
@@ -103,16 +86,16 @@ export const SelectedAsset = (props: SelectedAssetProps) => {
                   fontSize={2}
                   color="ink.1000"
                 >
-                  {getName(secondPair)}
+                  {getName(receiveToken)}
                 </Text>
-                <Caption>{secondPair}</Caption>
+                <Caption>{receiveToken}</Caption>
               </Stack>
             </Stack>
           </SpaceBetween>
         </Box>
       </Stack>
       <Caption>
-        Balance: {firstPair === 'STX' ? stxToken.balance.toString() : btcToken.balance.toString()} {firstPair}
+        Balance: {sendToken === 'STX' ? stxToken.balance.toString() : btcToken.balance.toString()} {sendToken}
       </Caption>
     </Stack>
   )

@@ -1,40 +1,49 @@
 import { CENTERED_FULL_PAGE_MAX_WIDTH } from "@app/components/global-styles/full-page-styles"
 import { PrimaryButton } from "@app/components/primary-button"
 import { Box, Stack } from "@stacks/ui"
-import { Suspense, useState } from "react"
+import { Suspense, useEffect } from "react"
 import { SendAmountField } from "./send-amount-field"
 import { SelectedAsset } from "./selected-asset"
 import { ReceiveAmountField } from "./receive-amount-field"
+import { getPairs, initSwap, useFeeRateState, useMaxBitcoinValueState, useMinBitcoinValueState, useReceiveTokenState, useReceiveValueState, useSendTokenState, useSendValueState, useStxBtcRateState } from "../hooks/swap-btc.hooks"
+import { useAtom } from "jotai"
+import { useNavigate } from "react-router-dom"
+import { RouteUrls } from "@shared/route-urls"
+import { CgArrowsExchangeAltV } from 'react-icons/cg';
+import { calculateReceiveValue } from "../utils/utils"
 
 export const BuyBtcForm = () =>  {
-  const [firstPair, setFirstPair] = useState('STX');
-  const [secondPair, setSecondPair] = useState('BTC');
-  const [sendValue, setSendValue] = useState('');
-  const [receiveValue, setReceiveValue] = useState('');
-  const maxBitcoinValue = 0.5;
-  const minBitcoinValue = 0.00005;
-  const stxBtcRate = 0.00003;
-  const feeRate = 3;
+  const navigate = useNavigate();
+  const [sendToken, setSendToken] = useSendTokenState();
+  const [receiveToken, setReceiveToken] = useReceiveTokenState();
+  const [sendValue, setSendValue] = useSendValueState();
+  const [receiveValue, setReceiveValue] = useReceiveValueState();
+  const [maxBitcoinValue, ] = useMaxBitcoinValueState();
+  const [minBitcoinValue, ] = useMinBitcoinValueState();
+  const [stxBtcRate, ] = useStxBtcRateState();
+  const [feeRate, ] = useFeeRateState();
+  const [, _initSwap] = useAtom(initSwap);
+  const [, _getPairs] = useAtom(getPairs);
+  const [, _calculateReceiveValue] = useAtom(calculateReceiveValue);
 
-  const getName = (name: string) => {
-    if (name === 'STX') return "Stacks";
-    return "Bitcoin"
-  }
+  useEffect(() => {
+    _getPairs();
+  }, [])
 
   const swapPair = () => {
-    if (firstPair === 'STX') {
-      setFirstPair("BTC");
-      setSecondPair("STX");
+    if (sendToken === 'STX') {
+      setSendToken("BTC");
+      setReceiveToken("STX");
     } else {
-      setFirstPair("STX");
-      setSecondPair("BTC");
+      setSendToken("STX");
+      setReceiveToken("BTC");
     }
     setSendValue(receiveValue);
     setReceiveValue(sendValue);
   }
 
   const calculateMinValue = () => {
-    if (firstPair === 'STX') {
+    if (sendToken === 'STX') {
       return 2
     } else {
       return 2 * stxBtcRate;
@@ -42,7 +51,7 @@ export const BuyBtcForm = () =>  {
   }
 
   const calculateMaxValue = () => {
-    if (firstPair === 'STX') {
+    if (sendToken === 'STX') {
       return 500;
     } else {
       return (500 * stxBtcRate).toFixed(5);
@@ -54,23 +63,28 @@ export const BuyBtcForm = () =>  {
     return parseFloat((parseFloat(sendValue) * feeRate / 100).toFixed(3))
   }
 
-  const calculateReceiveValue = (value: number) => {
-    if (firstPair === 'STX') {
-      return stxBtcRate * value;
-    } else {
-      return value / stxBtcRate;
-    }
-  }
+  // const calculateReceiveValue = (value: number) => {
+  //   if (sendToken === 'STX') {
+  //     return stxBtcRate * value;
+  //   } else {
+  //     return value / stxBtcRate;
+  //   }
+  // }
 
   const onValueChange = (value: string) => {
     setSendValue(value);
-    let num = parseFloat(value);
-    if (!isNaN(num)) {
-      let receiveValue = calculateReceiveValue(num).toFixed(4);
-      setReceiveValue(receiveValue);
-    } else {
-      setReceiveValue("");
-    }
+    // let num = parseFloat(value);
+    _calculateReceiveValue();
+    // if (!isNaN(num)) {
+    //   let receiveValue = calculateReceiveValue(num).toFixed(4);
+    //   setReceiveValue(receiveValue);
+    // } else {
+    //   setReceiveValue("");
+    // }
+  }
+
+  const navigateToInsertAddressPage = () => {
+    navigate(RouteUrls.InsertAddress);
   }
   
   return (
@@ -81,31 +95,34 @@ export const BuyBtcForm = () =>  {
       spacing="loose"
       width="100%"
     >
-      <SelectedAsset 
-        firstPair={firstPair}
-        secondPair={secondPair}
+      {/* <SelectedAsset 
+        sendToken={sendToken}
+        receiveToken={receiveToken}
         getName={getName}
         swapPair={swapPair}
-      />
+      /> */}
       <Suspense fallback={<></>}>
         <SendAmountField 
           error={""}
-          value={sendValue}
           title={"You send"}
-          minValue={calculateMinValue()}
-          maxValue={calculateMaxValue()}
-          unit={firstPair}
           onValueChange={onValueChange}
         />
       </Suspense>
+      <Stack justifyContent='center' alignItems='center'>
+        <CgArrowsExchangeAltV 
+          size={25} 
+          cursor='pointer'
+          onClick={swapPair} 
+        />
+      </Stack>
       <Suspense fallback={<></>}>
         <ReceiveAmountField
           value={receiveValue}
           fee={calculateFee()}
           feeRate={feeRate}
           rate={stxBtcRate}
-          unit={firstPair}
-          receiveUnit={secondPair}
+          unit={sendToken}
+          receiveUnit={receiveToken}
         />
       </Suspense>
       {/* <FeeRow feeFieldName="fee" feeTypeFieldName="feeType" isSponsored={true} /> */}
@@ -113,6 +130,10 @@ export const BuyBtcForm = () =>  {
         <PrimaryButton
           // data-testid=""
           width="100%"
+          onClick={() => _initSwap(navigateToInsertAddressPage)}
+          isDisabled={
+            sendValue === ''
+          }
         >
           Start Swap
         </PrimaryButton>
