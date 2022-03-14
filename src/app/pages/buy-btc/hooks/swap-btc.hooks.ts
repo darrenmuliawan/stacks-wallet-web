@@ -2,9 +2,10 @@ import BigNumber from "bignumber.js";
 import { crypto, ECPair, networks } from "bitcoinjs-lib";
 import { randomBytes } from "crypto";
 import { atom, useAtom } from "jotai"
-import { bitcoinMainnet, litecoinMainnet, lnswapApi } from "../constants/networks";
-import { currencies, feeRate, fees, limits, maxBitcoinValue, minBitcoinValue, pairWarning, rates, receiveToken, receiveTokenAddress, receiveValue, sendToken, sendValue, stxBtcRate, swapTxData } from "../store/swap-btc.store"
-import { splitPairId } from "../utils/utils";
+import { bitcoinMainnet, litecoinMainnet, lnswapApi, postData, SwapUpdateEvent } from "../constants/networks";
+import { decimals } from "../constants/numbers";
+import { currencies, feeRate, fees, limits, loadingInitSwap, maxBitcoinValue, minBitcoinValue, pairWarning, rates, receiveToken, receiveTokenAddress, receiveValue, sendAmountError, sendSwapAmount, sendSwapBitcoinAddress, sendSwapContractAddress, sendSwapResponse, sendSwapStatus, sendToken, sendValue, stxBtcRate, swapFormError, swapTxData } from "../store/swap-btc.store"
+import { generateKeys, getHexString, splitPairId } from "../utils/utils";
 
 // form related
 export const useSendTokenState = () => {
@@ -39,6 +40,14 @@ export const useFeeRateState = () => {
   return useAtom(feeRate);
 }
 
+export const useSwapFormErrorState = () => {
+  return useAtom(swapFormError);
+}
+
+export const useSendAmountErrorState = () => {
+  return useAtom(sendAmountError);
+}
+
 // get pairs
 export const useCurrenciesState = () => {
   return useAtom(currencies);
@@ -62,7 +71,7 @@ export const getPairs = atom(
   const url = `${lnswapApi}/getpairs`;
   await fetch(url).then(async (res) => {
     let response = await res.json();
-    console.log('res: ', response);
+    // console.log('res: ', response);
     const { warnings, pairs } = response;
     
     const _currencies = parseCurrencies(pairs);
@@ -74,8 +83,8 @@ export const getPairs = atom(
     set(rates, _rates);
     set(limits, _limits);
     set(fees, _fees);
-    console.log(_rates);
-    console.log(_fees);
+    // console.log(_rates);
+    // console.log(_fees);
     // set(pairWarning, warnings);
   }).catch(err => {
     console.log(err);
@@ -187,26 +196,58 @@ export const useReceiveTokenAddressState = () => {
   return useAtom(receiveTokenAddress);
 }
 
-const getHexString = (input: any) => {
-  return input.toString('hex');
-}
-
-const generateKeys = (network: any) => {
-  const keys = ECPair.makeRandom({ network });
-
-  return {
-    publicKey: getHexString(keys.publicKey),
-    privateKey: getHexString(keys.privateKey)
-  }
+export const useLoadingInitSwapState = () => {
+  return useAtom(loadingInitSwap);
 }
 
 export const initSwap = atom( 
   null,
   async (get, set, cb: () => any) => {
+    let base = get(sendToken);
+    let baseAmount = new BigNumber(get(sendValue));
+    let quote = get(receiveToken);
+    let quoteAmount = new BigNumber(get(receiveValue));
+
+    // Error checking: check if sendValue < min. value or > max. value
+    let error = {
+      error: false,
+      message: ""
+    }
+    let _limits: {[key: string]: any} = get(limits);
+    let _pair = base + "/" + quote;
+    if (_limits[_pair]) {
+      let _minimalValue = new BigNumber(_limits[_pair].minimal).dividedBy(decimals);
+      if (baseAmount.isLessThan(_minimalValue)) {
+        error = {
+          error: true,
+          message: "Invalid amount: can't send less than min. value"
+        }
+        set(swapFormError, error);
+        set(sendAmountError, error);
+        return;
+      }
+
+      let _maximalValue = new BigNumber(_limits[_pair].maximal).dividedBy(decimals);
+      if (baseAmount.isGreaterThan(_maximalValue)) {
+        error = {
+          error: true,
+          message: "Invalid amount: can't send more than max. value"
+        }
+        set(swapFormError, error);
+        set(sendAmountError, error);
+        return;
+      }
+    }
+
+    // Error checking: insufficient balance
+
+
+    // reset error message
+    set(swapFormError, error);
+    set(sendAmountError, error);
+
     // update swap tx data
     console.log('update swap tx data');
-    let base = get(sendToken);
-    let baseAmount = new BigNumber(get(sendValue)).toFixed(8);
     let keys = generateKeys(
       base === 'BTC' ? bitcoinMainnet : litecoinMainnet
     )
@@ -217,14 +258,12 @@ export const initSwap = atom(
     }
     let preimage = getHexString(randomBytes(32));
     let preimageHash = getHexString(crypto.sha256(preimage));
-    let quote = get(receiveToken);
-    let quoteAmount = new BigNumber(get(receiveValue)).toFixed(8);
 
     let newSwapTxData = {
       base: base,
       quote: quote,
-      baseAmount: baseAmount,
-      quoteAmount: quoteAmount,
+      baseAmount: baseAmount.toFixed(8),
+      quoteAmount: quoteAmount.toFixed(8),
       keys: keys,
       pair: pair,
       invoice: '',
@@ -251,11 +290,9 @@ export const checkSwapAddress = atom(
     } 
 
     let _swapTxData = get(swapTxData);
-    console.log('prev swaptxdata: ', _swapTxData);
     _swapTxData.invoice = address;
     let newSwapTxData = {..._swapTxData};
     set(swapTxData, newSwapTxData);
-    console.log('after swaptxdata: ', newSwapTxData);
 
     console.log(`sending to ${address}`)
     cb();
@@ -264,7 +301,8 @@ export const checkSwapAddress = atom(
 
 export const startSwap = atom(
   null,
-  async (get, set, cb: () => void) => {
+  async (get, set, { navigationCb, setSwapStatus }) => {
+    set(loadingInitSwap, true);
     const url = `${lnswapApi}/createswap`;
     let { pair, invoice, keys, preimageHash, quoteAmount, baseAmount } = get(swapTxData);
 
@@ -274,7 +312,7 @@ export const startSwap = atom(
     }
 
     let body;
-    let _quoteAmount = (parseFloat(quoteAmount) * 1000000).toString();
+    let _quoteAmount = parseInt((parseFloat(quoteAmount) * 1000000).toString()).toString();
     if (
       (pair.id === 'BTC/STX') &&
       invoice.toLowerCase().slice(0, 4) !== 'lnbc'
@@ -302,27 +340,154 @@ export const startSwap = atom(
     }
     console.log('body', body);
 
-    await fetch(url, {
-      method: "POST",
-      mode: 'cors',
-      cache: 'no-cache',
-      credentials: 'same-origin',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      redirect: 'follow',
-      referrerPolicy: 'no-referrer',
-      body: JSON.stringify(body)
-    }).then(async (response) => {
-      let res = await response.json();
-      console.log(res);
+    postData(url, body).then(data => {
+      set(loadingInitSwap, false);
+  
+      if (data.error) {
+        window.alert(`Failed to execute swap: ${data.error}`);
+        return;
+      }
+      console.log(data);
+      set(sendSwapResponse, data);
+  
+      // start listening for tx
+      let swapId = data.id;
+      startListeningForTx(swapId, setSwapStatus);
 
-      cb();
+      navigationCb();
     }).catch(err => {
       console.log("startSwap err: ", err);
       const message = err.response.data.error;
-
       window.alert(`Failed to execute swap: ${message}`)
     })
   }
 )
+
+// send swap tx data
+export const useSendSwapResponseState = () => {
+  return useAtom(sendSwapResponse);
+}
+
+export const useSendSwapStatusState = () => {
+  return useAtom(sendSwapStatus);
+}
+
+export const startListeningForTx = (swapId: string, setSwapStatus: any) => {
+  const url = `${lnswapApi}/streamswapstatus?id=${swapId}`;
+  const source = new EventSource(url);
+  console.log('start listening for tx...')
+
+  // setTimeout(() => {
+  //   handleSwapStatus({ status: SwapUpdateEvent.TransactionConfirmed }, setSwapStatus);
+  // }, 5000);
+  source.onerror = () => {
+    source.close();
+
+    console.log('Lost connection to LN Swap');
+    const url = `${lnswapApi}/swapstatus`;
+
+    const interval = setInterval(() => {
+      postData(url, {
+        id: swapId,
+      }).then(response => {
+        clearInterval(interval);
+        console.log('Reconnected to LN Swap');
+
+        startListeningForTx(swapId, setSwapStatus);
+        handleSwapStatus(response.data, setSwapStatus, source, {});
+      })
+
+    }, 1000);
+  }
+
+  source.onmessage = (event: any) => {
+    handleSwapStatus(JSON.parse(event.data), setSwapStatus, source, {});
+  }
+}
+
+export const handleSwapStatus = (data: any, setSwapStatus: any, source: any, callback: any) => {
+  const status = data.status;
+  console.log('handleSwapStatus: ', data);
+  
+  switch (status) {
+    case SwapUpdateEvent.TransactionConfirmed:
+      setSwapStatus({
+        pending: true,
+        message: "Waiting for invoice to be paid..."
+      })
+      break;
+
+    case SwapUpdateEvent.InvoiceFailedToPay:
+      source.close();
+      setSwapStatus({
+        error: true,
+        pending: false,
+        message: 'Could not pay invoice. Please refund your coins.'
+      })
+      break;
+    
+    case SwapUpdateEvent.SwapExpired:
+      source.close();
+      setSwapStatus({
+        error: true,
+        pending: false,
+        message: 'Swap expired. Please refund your coins.'
+      })
+      break;
+
+    case SwapUpdateEvent.InvoicePaid:
+    case SwapUpdateEvent.TransactionClaimed:
+      source.close();
+      callback();
+      break;
+
+    case SwapUpdateEvent.ASTransactionMempool:
+    case SwapUpdateEvent.TransactionMempool:
+      console.log('got mempool');
+      let swapStatusObj = {
+        pending: true,
+        message: 'Transaction is in mempool...',
+        transaction: null
+      };
+      if (data.transaction) {
+        swapStatusObj.transaction = data.transaction;
+      }
+      setSwapStatus(swapStatusObj);
+      break;
+
+    case SwapUpdateEvent.ASTransactionConfirmed:
+      console.log('got asconfirmed');
+      setSwapStatus({
+        pending: true,
+        message: 'Atomic Swap is ready'
+      });
+      break;
+
+    case SwapUpdateEvent.TransactionFailed:
+      setSwapStatus({
+        error: true,
+        pending: false,
+        message: 'Atomic Swap coins could not be sent. Please refund your coins.'
+      });
+      break;
+    
+    case SwapUpdateEvent.LockupFailed:
+      setSwapStatus({
+        error: true,
+        pending: false,
+        message: 'Lockup failed. Please refund your coins.'
+      })
+      break;
+
+    case SwapUpdateEvent.ChannelCreated:
+      setSwapStatus({
+        pending: true,
+        message: 'Channel is being created...'
+      })
+      break;
+
+    default:
+      console.log(`Unknown swap status: ${JSON.stringify(data)}`);
+      break;
+  }
+}

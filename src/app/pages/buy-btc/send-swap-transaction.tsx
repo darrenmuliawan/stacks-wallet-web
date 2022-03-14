@@ -5,9 +5,11 @@ import { Header } from "@app/components/header";
 import { SpaceBetween } from "@app/components/space-between";
 import { RouteUrls } from "@shared/route-urls";
 import { Box, Button, color, Stack, Text } from "@stacks/ui";
+import { truncateMiddle } from "@stacks/ui-utils";
 import { useNavigate } from "react-router-dom";
 import { QrCode } from "../receive-tokens/components/address-qr-code";
-import { useReceiveTokenState } from "./hooks/swap-btc.hooks";
+import { useReceiveTokenState, useSendSwapResponseState, useSendSwapStatusState } from "./hooks/swap-btc.hooks";
+import { FiCopy } from 'react-icons/fi';
 
 export const SendSwapTransaction = () => {
   const [receiveToken, ] = useReceiveTokenState();
@@ -16,9 +18,9 @@ export const SendSwapTransaction = () => {
 
   const getSwapTransactionContractContent = () => {
     if (receiveToken === 'STX') {
-      return <StxContractContent />
+      return <BtcContractContent />
     } else {
-      return <BtcContractContent /> 
+      return <StxContractContent /> 
     }
   }
 
@@ -37,13 +39,12 @@ export const SendSwapTransaction = () => {
 }
 
 const StxContractContent = () => {
+  const [sendSwapResponse, ] = useSendSwapResponseState();
+  
   return (
     <>
       <Text textAlign={['left', 'center']}>
-        You need to lock 3.00000000 STX on this contract
-      </Text>
-      <Text as='label' display='block' mb='tight' fontSize={1} fontWeight='500'>
-        Contract address
+        You need to lock <Text fontWeight='bold'>{sendSwapResponse.baseAmount} STX</Text> to this contract:
       </Text>
       <Box
         width="100%"
@@ -53,18 +54,21 @@ const StxContractContent = () => {
         border='1px solid'
         borderColor={color('border')}
         userSelect='none'
+        flexWrap='wrap'
+        wrap='wrap'
       >
         <SpaceBetween>
-          <Stack flexGrow={1}>
-            <Text>SP25...</Text>
+          <Stack>
+            <Text>{truncateMiddle(sendSwapResponse.address, 5)}</Text>
           </Stack>
+          <FiCopy 
+            cursor='pointer'
+            opacity={0.7}
+          />
         </SpaceBetween>
       </Box>
       <Button
         size="md"
-        pl="base-tight"
-        pr={'base'}
-        py="tight"
         fontSize={2}
         mode="primary"
         position="relative"
@@ -79,30 +83,33 @@ const StxContractContent = () => {
 }
 
 const BtcContractContent = () => {
+  const [sendSwapResponse, ] = useSendSwapResponseState();
+  const [sendSwapStatus, ] = useSendSwapStatusState();
+
   return (
     <>
       <Text textAlign={['left', 'center']}>
-        Send x BTC to this address
+        Transaction ID: <Text fontWeight='bold'>{sendSwapResponse.id}</Text>
       </Text>
-      <Text as='label' display='block' mb='tight' fontSize={1} fontWeight='500'>
-        37zHd...
+      <Text textAlign={['left', 'center']}>
+        Send <Text fontWeight='bold'>{sendSwapResponse.expectedAmount} BTC</Text> to this address
+      </Text>
+      <Text as='label' display='block' mb='tight' fontSize={1}>
+        {sendSwapResponse.address}
       </Text>
       <QrCode
-        principal="37zHD..."
+        principal={sendSwapResponse.bip21}
       />
       <Button
         size="md"
-        pl="base-tight"
-        pr={'base'}
-        py="tight"
         fontSize={2}
         mode="primary"
-        position="relative"
         // ref={ref}
         // onClick={handleClick}
-        borderRadius="10px"
+        borderRadius="12px"
+        isDisabled={sendSwapStatus.pending}
       >
-        <Text>Waiting for one confirmation...</Text>
+        <Text>{sendSwapStatus.message}</Text>
       </Button>
     </>
   )

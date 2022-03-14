@@ -1,4 +1,5 @@
 import BigNumber from "bignumber.js";
+import { ECPair } from "bitcoinjs-lib";
 import { atom } from "jotai";
 import { decimals } from "../constants/numbers";
 import { fees, rates, receiveToken, receiveValue, sendToken, sendValue } from "../store/swap-btc.store";
@@ -130,3 +131,16 @@ export const calculateReceiveValue = atom(
     set(receiveValue, newQuote.toString());
   }
 )
+
+export const getHexString = (input: any) => {
+  return input.toString('hex');
+}
+
+export const generateKeys = (network: any) => {
+  const keys = ECPair.makeRandom({ network });
+
+  return {
+    publicKey: getHexString(keys.publicKey),
+    privateKey: getHexString(keys.privateKey)
+  }
+}

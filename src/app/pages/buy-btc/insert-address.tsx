@@ -8,7 +8,7 @@ import { Box, Button, Input, Stack, Text } from "@stacks/ui"
 import { useAtom } from "jotai"
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { checkSwapAddress, startSwap, useReceiveTokenAddressState, useReceiveTokenState } from "./hooks/swap-btc.hooks"
+import { checkSwapAddress, startSwap, useLoadingInitSwapState, useReceiveTokenAddressState, useReceiveTokenState, useSendSwapStatusState } from "./hooks/swap-btc.hooks"
 
 export const InsertAddress = () => {
   const [receiveToken, ] = useReceiveTokenState();
@@ -17,6 +17,8 @@ export const InsertAddress = () => {
   const navigate = useNavigate();
   const [, _checkSwapAddress] = useAtom(checkSwapAddress);
   const [, _startSwap] = useAtom(startSwap);
+  const [loadingInitSwap, ] = useLoadingInitSwapState();
+  const [, setSwapStatus] = useSendSwapStatusState();
   useRouteHeader(<Header title="Step 1" onClose={() => navigate(RouteUrls.BuyBitcoin)}/>)
 
   useEffect(() => {
@@ -30,9 +32,10 @@ export const InsertAddress = () => {
   }, []);
 
   const handleClick = () => {
-    _checkSwapAddress(() => _startSwap(
-      () => navigate(RouteUrls.SendSwapTx)
-    ))
+    _checkSwapAddress(() => _startSwap({
+      navigationCb: () => navigate(RouteUrls.SendSwapTx),
+      setSwapStatus: (data: any) => setSwapStatus(data)
+    }))
   }
 
   return (
@@ -65,6 +68,7 @@ export const InsertAddress = () => {
           position="relative"
           onClick={handleClick}
           borderRadius="10px"
+          isDisabled={loadingInitSwap}
         >
           <Text>Next</Text>
         </Button>

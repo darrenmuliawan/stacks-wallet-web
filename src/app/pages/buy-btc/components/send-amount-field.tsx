@@ -3,25 +3,27 @@ import { SpaceBetween } from "@app/components/space-between";
 import { AssetAvatar } from "@app/components/stx-avatar";
 import { Caption } from "@app/components/typography";
 import { useCurrentAccount } from "@app/store/accounts/account.hooks";
-import { useAssets, useStxTokenState } from "@app/store/assets/asset.hooks";
+import { useAssets, useBitcoinTokenState, useStxTokenState } from "@app/store/assets/asset.hooks";
 import { Box, color, Input, InputGroup, Stack, StackProps, Text } from "@stacks/ui";
 import { SendFormSelectors } from "@tests/page-objects/send-form.selectors";
 import { memo } from "react";
-import { useLimitsState, useReceiveTokenState, useSendTokenState, useSendValueState } from "../hooks/swap-btc.hooks";
+import { useLimitsState, useReceiveTokenState, useSendAmountErrorState, useSendTokenState, useSendValueState } from "../hooks/swap-btc.hooks";
 import { formatMaxValue, formatMinValue, getPairName } from "../utils/utils";
 import { SendMaxButton } from "./send-max-button";
 
 interface AmountFieldProps extends StackProps {
-  error?: string;
   onValueChange: (value: string) => any;
 }
 
 const SendAmountFieldBase = (props: AmountFieldProps) => {
-  const { error, onValueChange, ...rest } = props;
+  const { onValueChange, ...rest } = props;
   const account = useCurrentAccount()
+  const stxToken = useStxTokenState(account ? account.address : '');
+  const btcToken = useBitcoinTokenState();
   const [sendToken, ] = useSendTokenState();
   const [receiveToken, ] = useReceiveTokenState();
   const [sendValue, ] = useSendValueState();
+  const [sendAmountError, ] = useSendAmountErrorState();
   const stxBalance = useStxTokenState(account ? account.address : "");
   const placeholder = `0.000000 ${sendToken}`;
   const title = "You send"
@@ -62,7 +64,7 @@ const SendAmountFieldBase = (props: AmountFieldProps) => {
                 >
                   {getPairName(sendToken)}
                 </Text>
-                <Caption>{sendToken}</Caption>
+                <Caption>{sendToken === 'STX' ? stxToken.balance.toString() : btcToken.balance.toString()} {sendToken}</Caption>
               </Stack>
             </Stack>
           </SpaceBetween>
@@ -89,9 +91,9 @@ const SendAmountFieldBase = (props: AmountFieldProps) => {
         </Box>
       </InputGroup>
       {
-        error && (
+        sendAmountError.error && (
           <ErrorLabel data-testid={SendFormSelectors.InputAmountFieldErrorLabel}>
-            <Text textStyle="caption">{error}</Text>
+            <Text textStyle="caption">{sendAmountError.message}</Text>
           </ErrorLabel>
         )
       }
