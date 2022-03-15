@@ -2,6 +2,7 @@ import BigNumber from "bignumber.js";
 import { ECPair } from "bitcoinjs-lib";
 import { atom } from "jotai";
 import { decimals } from "../constants/numbers";
+import { SwapInfo, SwapResponse } from "../interfaces";
 import { fees, rates, receiveToken, receiveValue, sendToken, sendValue } from "../store/swap-btc.store";
 
 export const randomBytes = (size: number) => {

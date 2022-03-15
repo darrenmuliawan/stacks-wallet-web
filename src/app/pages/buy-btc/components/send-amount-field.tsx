@@ -5,6 +5,7 @@ import { Caption } from "@app/components/typography";
 import { useCurrentAccount } from "@app/store/accounts/account.hooks";
 import { useAssets, useBitcoinTokenState, useStxTokenState } from "@app/store/assets/asset.hooks";
 import { Box, color, Input, InputGroup, Stack, StackProps, Text } from "@stacks/ui";
+import { microStxToStx } from "@stacks/ui-utils";
 import { SendFormSelectors } from "@tests/page-objects/send-form.selectors";
 import { memo } from "react";
 import { useLimitsState, useReceiveTokenState, useSendAmountErrorState, useSendTokenState, useSendValueState } from "../hooks/swap-btc.hooks";
@@ -64,7 +65,7 @@ const SendAmountFieldBase = (props: AmountFieldProps) => {
                 >
                   {getPairName(sendToken)}
                 </Text>
-                <Caption>{sendToken === 'STX' ? stxToken.balance.toString() : btcToken.balance.toString()} {sendToken}</Caption>
+                <Caption>{sendToken === 'STX' ? microStxToStx(stxToken.balance.toString()) : btcToken.balance.toString()} {sendToken}</Caption>
               </Stack>
             </Stack>
           </SpaceBetween>

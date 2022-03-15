@@ -23,7 +23,7 @@ import { BitcoinAssets } from "@app/features/balances-list/components/bitcoin-as
 import { useStxTokenState } from "@app/store/assets/asset.hooks";
 import { AssetRow } from "@app/components/asset-row";
 import { BtcAccountTabs } from "./components/btc-account-tabs";
-import { BtcActivityList } from "./components/btc-activity-list";
+import { BtcActivityList } from "../btc-activity/btc-activity-list";
 
 export const AccountAddress = memo((props: StackProps) => {
   const currentAccount = useCurrentAccount();

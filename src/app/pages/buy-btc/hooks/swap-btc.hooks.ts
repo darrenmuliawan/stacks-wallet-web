@@ -1,10 +1,11 @@
+import { currentAccountSubmittedBtcTxsState, RefundInfo } from "@app/pages/btc-activity/store/btc-activity.store";
 import BigNumber from "bignumber.js";
 import { crypto, ECPair, networks } from "bitcoinjs-lib";
 import { randomBytes } from "crypto";
 import { atom, useAtom } from "jotai"
 import { bitcoinMainnet, litecoinMainnet, lnswapApi, postData, SwapUpdateEvent } from "../constants/networks";
 import { decimals } from "../constants/numbers";
-import { currencies, feeRate, fees, limits, loadingInitSwap, maxBitcoinValue, minBitcoinValue, pairWarning, rates, receiveToken, receiveTokenAddress, receiveValue, sendAmountError, sendSwapAmount, sendSwapBitcoinAddress, sendSwapContractAddress, sendSwapResponse, sendSwapStatus, sendToken, sendValue, stxBtcRate, swapFormError, swapTxData } from "../store/swap-btc.store"
+import { currencies, feeRate, fees, limits, loadingInitSwap, maxBitcoinValue, minBitcoinValue, pairWarning, rates, receiveToken, receiveTokenAddress, receiveValue, sendAmountError, sendSwapAmount, sendSwapBitcoinAddress, sendSwapContractAddress, sendSwapResponse, sendSwapStatus, sendToken, sendValue, stxBtcRate, swapFormError, swapResponse, swapTxData } from "../store/swap-btc.store"
 import { generateKeys, getHexString, splitPairId } from "../utils/utils";
 
 // form related
@@ -349,7 +350,24 @@ export const startSwap = atom(
       }
       console.log(data);
       set(sendSwapResponse, data);
-  
+
+      let _swapInfo = get(swapTxData)
+      let refundObject: RefundInfo = {
+        amount: parseInt((parseFloat(data.expectedAmount) / 100).toString()),
+        contract: data.address,
+        currency: _swapInfo.base,
+        privateKey: _swapInfo.keys.privateKey,
+        preimageHash: _swapInfo.preimageHash,
+        redeemScript: data.redeemScript,
+        swapInfo: _swapInfo,
+        swapResponse: data,
+        timeoutBlockHeight: data.timeoutBlockHeight
+      }
+      console.log('refundObj', refundObject);
+      set(currentAccountSubmittedBtcTxsState, {
+        [data.id]: refundObject
+      });
+
       // start listening for tx
       let swapId = data.id;
       startListeningForTx(swapId, setSwapStatus);
