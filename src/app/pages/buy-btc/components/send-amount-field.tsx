@@ -1,4 +1,5 @@
 import { ErrorLabel } from "@app/components/error-label";
+import { LnBtcAvatar } from "@app/components/ln-btc-avatar";
 import { SpaceBetween } from "@app/components/space-between";
 import { AssetAvatar } from "@app/components/stx-avatar";
 import { Caption } from "@app/components/typography";
@@ -30,6 +31,36 @@ const SendAmountFieldBase = (props: AmountFieldProps) => {
   const title = "You send"
   const [limits, ] = useLimitsState();
 
+  const getAvatar = () => {
+    if (sendToken === 'STX') {
+      return (
+        <AssetAvatar
+          useStx={true}
+          useBtc={false}
+          gradientString=""
+          mr="tight"
+          size="36px"
+          color="white"
+        />
+      )
+    } else if (sendToken === 'BTC') {
+      return (
+        <AssetAvatar
+          useStx={false}
+          useBtc={true}
+          gradientString=""
+          mr="tight"
+          size="36px"
+          color="white"
+        />
+      )
+    } else if (sendToken === 'BTC ⚡') {
+      return (
+        <LnBtcAvatar />
+      )
+    }
+  }
+
   return (
     <Stack {...rest}>
       <InputGroup flexDirection="column">
@@ -48,14 +79,7 @@ const SendAmountFieldBase = (props: AmountFieldProps) => {
         >
           <SpaceBetween>
             <Stack spacing="base" alignItems="center" justifyContent="center" isInline>
-              <AssetAvatar
-                useStx={sendToken === 'STX'}
-                useBtc={sendToken === 'BTC'}
-                gradientString=""
-                mr="tight"
-                size="36px"
-                color="white"
-              />
+              {getAvatar()}
               <Stack flexGrow={1}>
                 <Text
                   display="block"
@@ -65,7 +89,18 @@ const SendAmountFieldBase = (props: AmountFieldProps) => {
                 >
                   {getPairName(sendToken)}
                 </Text>
-                <Caption>{sendToken === 'STX' ? microStxToStx(stxToken.balance.toString()) : btcToken.balance.toString()} {sendToken}</Caption>
+                <Caption>{
+                  sendToken === 'STX' 
+                  ? 
+                  microStxToStx(stxToken.balance.toString()) 
+                  : 
+                  sendToken === 'BTC'
+                  ?
+                  btcToken.balance.toString()
+                  :
+                  ""
+                } {sendToken}
+                </Caption>
               </Stack>
             </Stack>
           </SpaceBetween>

@@ -44,6 +44,9 @@ import { LocationInformation } from '@app/pages/data-sources/components/location
 import { ReceiveBitcoin } from '@app/pages/btc-account/components/receive-btc';
 import { InsertAddress } from '@app/pages/buy-btc/insert-address';
 import { SendSwapTransaction } from '@app/pages/buy-btc/send-swap-transaction';
+import { ClaimToken } from '@app/pages/buy-btc/claim-token';
+import { ReceiveSwapTransaction } from '@app/pages/buy-btc/receive-swap-transaction';
+import { EndSwap } from '@app/pages/buy-btc/end-swap';
 
 export function AppRoutes(): JSX.Element | null {
   const { hasRehydratedVault } = useWallet();
@@ -261,6 +264,36 @@ export function AppRoutes(): JSX.Element | null {
             <AccountGate>
               <Suspense fallback={<></>}>
                 <SendSwapTransaction />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.ReceiveSwapTx}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <ReceiveSwapTransaction />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.ClaimToken}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <ClaimToken />
+              </Suspense>
+            </AccountGate>
+          }
+        />
+        <Route
+          path={RouteUrls.EndSwap}
+          element={
+            <AccountGate>
+              <Suspense fallback={<></>}>
+                <EndSwap />
               </Suspense>
             </AccountGate>
           }

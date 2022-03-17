@@ -1,5 +1,6 @@
 import { useRouteHeader } from "@app/common/hooks/use-route-header"
 import { CenteredPageContainer } from "@app/components/centered-page-container"
+import { CENTERED_FULL_PAGE_MAX_WIDTH } from "@app/components/global-styles/full-page-styles"
 import { Header } from "@app/components/header"
 import { useCurrentAccount } from "@app/store/accounts/account.hooks"
 import { getBitcoinAddress } from "@app/store/assets/utils"
@@ -8,46 +9,92 @@ import { Box, Button, Input, Stack, Text } from "@stacks/ui"
 import { useAtom } from "jotai"
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { checkSwapAddress, startSwap, useLoadingInitSwapState, useReceiveTokenAddressState, useReceiveTokenState, useSendSwapStatusState } from "./hooks/swap-btc.hooks"
+import { checkLnSwapAddress, setClaimStxInfo, startLnSwap, useLnSwapStatusState, useLockupTokenTxState } from "./hooks/ln-swap-btc.hooks"
+import { checkSwapAddress, navigateNextStep, setLockStxInfo, startSwap, useLoadingInitSwapState, useReceiveTokenAddressState, useReceiveTokenState, useReceiveValueState, useSendSwapStatusState, useSendTokenState, useSwapStepState } from "./hooks/swap-btc.hooks"
+import { convertBtcToSatoshis } from "./utils/utils"
 
 export const InsertAddress = () => {
+  const [sendToken, ] = useSendTokenState();
   const [receiveToken, ] = useReceiveTokenState();
   const [receiveTokenAddress, setReceiveTokenAddress] = useReceiveTokenAddressState();
+  const [receiveAmount, ] = useReceiveValueState();
   const currentAccount = useCurrentAccount();
   const navigate = useNavigate();
   const [, _checkSwapAddress] = useAtom(checkSwapAddress);
+  const [, _checkLnSwapAddress] = useAtom(checkLnSwapAddress);
   const [, _startSwap] = useAtom(startSwap);
+  const [, _startLnSwap] = useAtom(startLnSwap);
   const [loadingInitSwap, ] = useLoadingInitSwapState();
   const [, setSwapStatus] = useSendSwapStatusState();
-  useRouteHeader(<Header title="Step 1" onClose={() => navigate(RouteUrls.BuyBitcoin)}/>)
+  const [, setLnSwapStatus] = useLnSwapStatusState();
+  const [, setLockupTokenTx] = useLockupTokenTxState();
+  const [, _setLockStxInfo] = useAtom(setLockStxInfo);
+  const [, _setClaimStxInfo] = useAtom(setClaimStxInfo);
+  const [, nextStep] = useAtom(navigateNextStep);
+  const [step, ] = useSwapStepState();
+  useRouteHeader(<Header title={`Step 1`} onClose={() => navigate(RouteUrls.BuyBitcoin)}/>);
+  const isLightning = sendToken.includes('⚡');
 
   useEffect(() => {
     let stxAddress = currentAccount ? currentAccount.address : "";
     let btcAddress = getBitcoinAddress(stxAddress);
     if (receiveToken === 'STX') {
       setReceiveTokenAddress(stxAddress);
-    } else {
+    } else if (receiveToken === 'BTC') {
       setReceiveTokenAddress(btcAddress);
+    } else if (receiveToken === 'BTC ⚡') {
+      // TODO: Add capability to generate LN invoice from this wallet
     }
   }, []);
 
   const handleClick = () => {
-    _checkSwapAddress(() => _startSwap({
-      navigationCb: () => navigate(RouteUrls.SendSwapTx),
-      setSwapStatus: (data: any) => setSwapStatus(data)
-    }))
+    if (isLightning) {
+      _checkLnSwapAddress(() => _startLnSwap({
+        setSwapStatus: (data: any) => setLnSwapStatus(data),
+        setLockupTokenTx: (data: any) => setLockupTokenTx(data),
+        setClaimStxInfo: _setClaimStxInfo,
+        navigateSendSwapToken: () => navigate(RouteUrls.SendSwapTx),
+        navigateReceiveSwapToken: () => navigate(RouteUrls.ReceiveSwapTx),
+        navigateClaimToken: () => navigate(RouteUrls.ClaimToken),
+        navigateTimelockExpired: () => navigate(RouteUrls.SendSwapTx),
+        navigateEndSwap: () => navigate(RouteUrls.EndSwap)
+      }));
+    } else {
+      _checkSwapAddress(() => _startSwap({
+        nextStage: () => nextStep(navigate),
+        setSwapStatus: (data: any) => setSwapStatus(data),
+        setLockStxInfo: _setLockStxInfo
+      }))
+    }
+  }
+
+  const getTitle = () => {
+    if (receiveToken === 'STX' || receiveToken === 'BTC') {
+      return (
+        <Text textAlign={['left', 'center']}>
+          Insert {receiveToken} address
+        </Text>
+      )
+    } else if (receiveToken === 'BTC ⚡') {
+      return (
+        <Text textAlign={['left', 'center']}>
+          Insert BTC Lightning invoice for <Text fontWeight={'bold'}>{convertBtcToSatoshis(receiveAmount)} satoshis</Text>
+        </Text>
+      )
+    } 
+    return null;
   }
 
   return (
-    <CenteredPageContainer>
+    <CenteredPageContainer
+      maxWidth={CENTERED_FULL_PAGE_MAX_WIDTH}
+    >
       <Stack
         px={['unset', 'base-loose']}
         spacing='loose'
         textAlign='center'
       >
-        <Text textAlign={['left', 'center']}>
-          Insert {receiveToken} address
-        </Text>
+        {getTitle()}
         <Box position="relative">
           <Input
             display="block"

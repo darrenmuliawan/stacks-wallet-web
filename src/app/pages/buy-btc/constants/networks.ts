@@ -1,7 +1,9 @@
 import { networks } from "bitcoinjs-lib";
 
 // lnswap API
-export const lnswapApi = 'https://api.lnswap.org:9002';
+export const reverseLNswapApi = 'https://api.lnswap.org:9007';
+export const lnSwapApi = 'https://api.lnswap.org:9007';
+
 export const SwapUpdateEvent = {
   InvoicePaid: 'invoice.paid',
   InvoiceSettled: 'invoice.settled',
@@ -59,6 +61,6 @@ export const postData = async (url = '', data = {}) => {
     referrerPolicy: 'no-referrer',
     body: JSON.stringify(data)
   })
-  
+  console.log(response);
   return response.json();
 }

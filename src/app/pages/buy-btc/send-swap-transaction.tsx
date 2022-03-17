@@ -5,27 +5,39 @@ import { Header } from "@app/components/header";
 import { SpaceBetween } from "@app/components/space-between";
 import { RouteUrls } from "@shared/route-urls";
 import { Box, Button, color, Stack, Text } from "@stacks/ui";
-import { truncateMiddle } from "@stacks/ui-utils";
+import { microStxToStx, truncateMiddle } from "@stacks/ui-utils";
 import { useNavigate } from "react-router-dom";
 import { QrCode } from "../receive-tokens/components/address-qr-code";
-import { useReceiveTokenState, useSendSwapResponseState, useSendSwapStatusState } from "./hooks/swap-btc.hooks";
+import { broadcastLockStx, useLockStxTxIdState, useLockStxTxSubmittedState, usePreviewLockStxVisibility, useSendSwapResponseState, useSendSwapStatusState, useSendTokenState, useSwapStepState } from "./hooks/swap-btc.hooks";
 import { FiCopy } from 'react-icons/fi';
+import { useLnSwapResponseState, useLnSwapStatusState, useTxOptionsState } from "./hooks/ln-swap-btc.hooks";
+import { useAtom } from "jotai";
+import { CallContractConfirmDrawer } from "./components/call-contract-confirm-drawer";
+import { Caption } from "@app/components/typography";
+import { Link } from "@app/components/link";
+import { useExplorerLink } from "@app/common/hooks/use-explorer-link";
 
 export const SendSwapTransaction = () => {
-  const [receiveToken, ] = useReceiveTokenState();
+  const [sendToken, ] = useSendTokenState();
   const navigate = useNavigate();
-  useRouteHeader(<Header title="Step 2" onClose={() => navigate(RouteUrls.BuyBitcoin)}/>)
+  const [step, ] = useSwapStepState();
+  useRouteHeader(<Header title={`Step 2`} onClose={() => navigate(RouteUrls.BuyBitcoin)}/>)
 
   const getSwapTransactionContractContent = () => {
-    if (receiveToken === 'STX') {
-      return <BtcContractContent />
-    } else {
+    if (sendToken === 'STX') {
       return <StxContractContent /> 
+    } else if (sendToken === 'BTC') {
+      return <BtcContractContent />
+    } else if (sendToken === 'BTC ⚡') {
+      return <BtcLnContractContent /> 
     }
+    return null;
   }
 
   return (
-    <CenteredPageContainer>
+    <CenteredPageContainer
+      maxWidth={CENTERED_FULL_PAGE_MAX_WIDTH}
+    >
       <Stack
         maxWidth={CENTERED_FULL_PAGE_MAX_WIDTH}
         px={['unset', 'base-loose']}
@@ -38,13 +50,57 @@ export const SendSwapTransaction = () => {
   )
 }
 
-const StxContractContent = () => {
-  const [sendSwapResponse, ] = useSendSwapResponseState();
-  
+const BtcLnContractContent = () => {
+  const [lnSwapResponse, ] = useLnSwapResponseState();
+  const [lnSwapStatus, ] = useLnSwapStatusState();
+
   return (
     <>
       <Text textAlign={['left', 'center']}>
-        You need to lock <Text fontWeight='bold'>{sendSwapResponse.baseAmount} STX</Text> to this contract:
+        Pay this BTC Lightning invoice
+      </Text>
+      <Box
+        width="100%"
+        px='base'
+        py='base'
+        borderRadius='8px'
+        border='1px solid'
+        borderColor={color('border')}
+        userSelect='none'
+        flexWrap='wrap'
+        wrap='wrap'
+      >
+        <SpaceBetween>
+          <Stack>
+            <Text>{truncateMiddle(lnSwapResponse.invoice, 8)}</Text>
+          </Stack>
+          <FiCopy 
+            cursor='pointer'
+            opacity={0.7}
+          />
+        </SpaceBetween>
+      </Box>
+      <QrCode
+        principal={lnSwapResponse.invoice}
+      />
+      <Text>{lnSwapStatus.message}</Text>
+    </>
+  )
+}
+
+const StxContractContent = () => {
+  const [sendSwapResponse, ] = useSendSwapResponseState();
+  const [, _broadcastLockStx] = useAtom(broadcastLockStx);
+  const [txOptions, ] = useTxOptionsState();
+  const [previewLockStxVisibility, setPreviewLockStxVisibility] = usePreviewLockStxVisibility();
+  const [lockStxTxSubmitted, ] = useLockStxTxSubmittedState();
+  const [lockStxTxId, ] = useLockStxTxIdState();
+  const { handleOpenTxLink } = useExplorerLink();
+
+  return (
+    <>
+      <Text textAlign={['left', 'center']}>
+        You need to lock <Text fontWeight='bold'>{microStxToStx((sendSwapResponse.expectedAmount / 100).toFixed(6))} STX</Text> to this contract:
       </Text>
       <Box
         width="100%"
@@ -67,17 +123,32 @@ const StxContractContent = () => {
           />
         </SpaceBetween>
       </Box>
+      {
+        lockStxTxId !== '' &&
+        <Caption>
+          Transaction submitted! You can check your transaction <Link fontSize={12} onClick={() => handleOpenTxLink(lockStxTxId)}>here</Link>.
+        </Caption>
+      }
       <Button
         size="md"
         fontSize={2}
         mode="primary"
         position="relative"
         // ref={ref}
-        // onClick={handleClick}
+        onClick={() => setPreviewLockStxVisibility(true)}
         borderRadius="10px"
       >
         <Text>Lock STX</Text>
       </Button>
+      <CallContractConfirmDrawer
+        amount={microStxToStx((sendSwapResponse.expectedAmount / 100).toFixed(8))}
+        onBroadcastTx={_broadcastLockStx}
+        txOptions={txOptions}
+        title={'Lock STX'}
+        disabled={lockStxTxSubmitted}
+        isShowing={previewLockStxVisibility}
+        onClose={() => setPreviewLockStxVisibility(false)}
+      />
     </>
   )
 }
@@ -100,17 +171,7 @@ const BtcContractContent = () => {
       <QrCode
         principal={sendSwapResponse.bip21}
       />
-      <Button
-        size="md"
-        fontSize={2}
-        mode="primary"
-        // ref={ref}
-        // onClick={handleClick}
-        borderRadius="12px"
-        isDisabled={sendSwapStatus.pending}
-      >
-        <Text>{sendSwapStatus.message}</Text>
-      </Button>
+      <Text>{sendSwapStatus.message}</Text>
     </>
   )
 }

@@ -1,4 +1,5 @@
 import { atom } from "jotai";
+import { SwapResponse } from "../interfaces";
 
 // form values
 export const defaultError = {
@@ -6,7 +7,7 @@ export const defaultError = {
   message: ""
 }
 export const sendToken = atom('STX');
-export const receiveToken = atom('BTC');
+export const receiveToken = atom('BTC ⚡');
 export const sendValue = atom('');
 export const receiveValue = atom('');
 export const maxBitcoinValue = atom(0);
@@ -15,6 +16,10 @@ export const stxBtcRate = atom(0);
 export const feeRate = atom(0);
 export const swapFormError = atom(defaultError);
 export const sendAmountError = atom(defaultError);
+
+// swap step
+export const swapStep = atom<number>(0);
+export const swapWorkflow = atom<string[]>([]);
 
 // pairs data
 export const currencies = atom(['BTC', 'STX']);
@@ -46,7 +51,21 @@ export const swapTxData = atom({
   preimageHash: '',
   requestedAmount: ''
 });
-export const swapResponse = atom({});
+export const swapResponse = atom<SwapResponse>({
+  acceptZeroConf: false,
+  address: '',
+  asTimeoutBlockHeight: 0,
+  baseAmount: '',
+  bip21: '',
+  claimAddress: '',
+  contractAddress: '',
+  expectedAmount: 0,
+  id: '',
+  origBlockHeight: 0,
+  quoteAmount: '',
+  redeemScript: '',
+  timeoutBlockHeight: 0,
+});
 export const swapStatus = atom({
   error: false,
   pending: false,
@@ -64,7 +83,7 @@ export const sendSwapResponse = atom({
   bip21: '',
   claimAddress: '',
   contractAddress: '',
-  expectedAmount: '',
+  expectedAmount: 0,
   id: '',
   origBlockHeight: 0,
   quoteAmount: '',
@@ -79,3 +98,6 @@ export const sendSwapStatus = atom({
   pending: true,
   message: "Waiting for one confirmation..."
 })
+export const lockStxTxId = atom('');
+export const previewLockStxVisibility = atom(false);
+export const lockStxTxSubmitted = atom(false);

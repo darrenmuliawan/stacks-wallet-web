@@ -1,3 +1,4 @@
+import { LnBtcAvatar } from "@app/components/ln-btc-avatar";
 import { SpaceBetween } from "@app/components/space-between";
 import { AssetAvatar } from "@app/components/stx-avatar";
 import { Caption } from "@app/components/typography";
@@ -25,6 +26,37 @@ export const ReceiveAmountField = (props: ReceiveAmountFieldProps) => {
   const title = "You receive";
   const _rate = formatRate(rates, unit, receiveUnit);
 
+  const getAvatar = () => {
+    if (receiveUnit === 'STX') {
+      return (
+        <AssetAvatar
+          useStx={true}
+          useBtc={false}
+          gradientString=""
+          mr="tight"
+          size="36px"
+          color="white"
+        />
+      )
+    } else if (receiveUnit === 'BTC') {
+      return (
+        <AssetAvatar
+          useStx={false}
+          useBtc={true}
+          gradientString=""
+          mr="tight"
+          size="36px"
+          color="white"
+        />
+      )
+    } else if (receiveUnit === 'BTC ⚡') {
+      return (
+        <LnBtcAvatar />
+      )
+    }
+    return null;
+  }
+  
   return (
     <Stack {...rest}>
       <Stack>
@@ -43,14 +75,7 @@ export const ReceiveAmountField = (props: ReceiveAmountFieldProps) => {
         >
           <SpaceBetween>
             <Stack spacing="base" alignItems="center" justifyContent="center" isInline>
-              <AssetAvatar
-                useStx={receiveUnit === 'STX'}
-                useBtc={receiveUnit === 'BTC'}
-                gradientString=""
-                mr="tight"
-                size="36px"
-                color="white"
-              />
+              {getAvatar()}
               <Stack flexGrow={1}>
                 <Text
                   display="block"
@@ -81,7 +106,7 @@ export const ReceiveAmountField = (props: ReceiveAmountFieldProps) => {
         </Box>
       </Stack>
       <Stack mt="base-tight" justify="space-between" alignItems="center" isInline>
-        <Caption>Current fee: {formatFees(fees, sendValue, unit, receiveUnit).toFixed(5)} {unit} ({formatFeeRate(fees, unit, receiveUnit)}%)</Caption>
+        <Caption>Current fee: {formatFees(fees, rates, sendValue, unit, receiveUnit).toFixed(8)} {unit} ({formatFeeRate(fees, unit, receiveUnit)}%)</Caption>
         <Caption>Rate: {_rate.toFixed(5)}</Caption>
       </Stack>
     </Stack>

@@ -1,12 +1,24 @@
 import { currentAccountSubmittedBtcTxsState, RefundInfo } from "@app/pages/btc-activity/store/btc-activity.store";
+import { getContractName } from "@stacks/ui-utils";
 import BigNumber from "bignumber.js";
-import { crypto, ECPair, networks } from "bitcoinjs-lib";
+import { crypto } from "bitcoinjs-lib";
 import { randomBytes } from "crypto";
 import { atom, useAtom } from "jotai"
-import { bitcoinMainnet, litecoinMainnet, lnswapApi, postData, SwapUpdateEvent } from "../constants/networks";
+import { bitcoinMainnet, litecoinMainnet, postData, SwapUpdateEvent } from "../constants/networks";
 import { decimals } from "../constants/numbers";
-import { currencies, feeRate, fees, limits, loadingInitSwap, maxBitcoinValue, minBitcoinValue, pairWarning, rates, receiveToken, receiveTokenAddress, receiveValue, sendAmountError, sendSwapAmount, sendSwapBitcoinAddress, sendSwapContractAddress, sendSwapResponse, sendSwapStatus, sendToken, sendValue, stxBtcRate, swapFormError, swapResponse, swapTxData } from "../store/swap-btc.store"
-import { generateKeys, getHexString, splitPairId } from "../utils/utils";
+import { currencies, feeRate, fees, limits, loadingInitSwap, lockStxTxId, lockStxTxSubmitted, maxBitcoinValue, minBitcoinValue, previewLockStxVisibility, rates, receiveToken, receiveTokenAddress, receiveValue, sendAmountError, sendSwapResponse, sendSwapStatus, sendToken, sendValue, stxBtcRate, swapFormError, swapResponse, swapStep, swapTxData, swapWorkflow } from "../store/swap-btc.store"
+import { generateKeys, getContractAddress, getHexString, splitPairId } from "../utils/utils";
+import lightningPayReq from 'bolt11';
+import { currentAccountState, currentAccountStxAddressState } from "@app/store/accounts";
+import { AnchorMode, broadcastTransaction, bufferCV, createStacksPrivateKey, createSTXPostCondition, FungibleConditionCode, makeUnsignedContractCall, pubKeyfromPrivKey, publicKeyToString, standardPrincipalCV, TransactionSigner, UnsignedContractCallOptions } from "@stacks/transactions";
+import BN from "bn.js";
+import { currentStacksNetworkState } from "@app/store/network/networks";
+import { estimatedTxByteLength, serializedTxPayload, txOptions, unsignedTx } from "../store/ln-swap-btc.store";
+import { serializePayload } from "@stacks/transactions/dist/payload";
+import { RouteUrls } from "@shared/route-urls";
+
+// const lnswapApi = 'https://api.lnswap.org:9002';
+const lnswapApi = 'https://api.lnswap.org:9007';
 
 // form related
 export const useSendTokenState = () => {
@@ -49,6 +61,22 @@ export const useSendAmountErrorState = () => {
   return useAtom(sendAmountError);
 }
 
+export const usePreviewLockStxVisibility = () => {
+  return useAtom(previewLockStxVisibility);
+}
+
+export const useLockStxTxSubmittedState = () => {
+  return useAtom(lockStxTxSubmitted);
+}
+
+export const useLockStxTxIdState = () => {
+  return useAtom(lockStxTxId);
+}
+
+export const useSwapStepState = () => {
+  return useAtom(swapStep);
+}
+
 // get pairs
 export const useCurrenciesState = () => {
   return useAtom(currencies);
@@ -72,9 +100,8 @@ export const getPairs = atom(
   const url = `${lnswapApi}/getpairs`;
   await fetch(url).then(async (res) => {
     let response = await res.json();
-    // console.log('res: ', response);
+
     const { warnings, pairs } = response;
-    
     const _currencies = parseCurrencies(pairs);
     const _rates = parseRates(pairs);
     const _limits = parseLimits(pairs, _rates);
@@ -84,9 +111,6 @@ export const getPairs = atom(
     set(rates, _rates);
     set(limits, _limits);
     set(fees, _fees);
-    // console.log(_rates);
-    // console.log(_fees);
-    // set(pairWarning, warnings);
   }).catch(err => {
     console.log(err);
   })
@@ -203,10 +227,18 @@ export const useLoadingInitSwapState = () => {
 
 export const initSwap = atom( 
   null,
-  async (get, set, cb: () => any) => {
+  async (get, set, nextStep: () => any) => {
     let base = get(sendToken);
-    let baseAmount = new BigNumber(get(sendValue));
     let quote = get(receiveToken);
+
+    // set workflow
+    let workflow = getSwapWorkflow(base, quote);
+    console.log('workflow: ', workflow);
+    set(swapWorkflow, workflow);
+
+    base = base.split(" ")[0];
+    let baseAmount = new BigNumber(get(sendValue));
+    quote = quote.split(" ")[0];
     let quoteAmount = new BigNumber(get(receiveValue));
 
     // Error checking: check if sendValue < min. value or > max. value
@@ -257,8 +289,7 @@ export const initSwap = atom(
       id: "BTC/STX",
       orderSide: base === 'BTC' ? "sell" : "buy"
     }
-    let preimage = getHexString(randomBytes(32));
-    let preimageHash = getHexString(crypto.sha256(preimage));
+    let preimage = randomBytes(32);
 
     let newSwapTxData = {
       base: base,
@@ -268,15 +299,15 @@ export const initSwap = atom(
       keys: keys,
       pair: pair,
       invoice: '',
-      preimage: preimage,
-      preimageHash: preimageHash,
+      preimage: getHexString(preimage),
+      preimageHash: getHexString(crypto.sha256(preimage)),
       requestedAmount: ''
     };
     console.log('swap tx data: ', newSwapTxData)
     set(swapTxData, newSwapTxData);
 
-    // run callback
-    cb();
+    // next
+    nextStep();
   }
 )
 
@@ -300,11 +331,39 @@ export const checkSwapAddress = atom(
   }
 )
 
+export const getSwapWorkflow = (sendToken: string, receiveToken: string) => {
+  /**
+   * STX -> BTC ⚡
+   * [INSERT_ADDRESS, LOCK_STX, SENDING_LN_PAYMENT, FINISH_PAGE]
+   */
+  if (sendToken === 'STX' && receiveToken === 'BTC ⚡') {
+    return [RouteUrls.InsertAddress, RouteUrls.SendSwapTx, RouteUrls.ReceiveSwapTx, RouteUrls.EndSwap];
+  }
+  return [];
+}
+
+export const navigateNextStep = atom(
+  null,
+  async (get, set, navigate: any) => {
+    let currentStep = get(swapStep);
+    console.log('current step: ', currentStep);
+    let _swapWorkflow = get(swapWorkflow);
+    console.log('next: ', _swapWorkflow[currentStep])
+    navigate(_swapWorkflow[currentStep]);
+    set(swapStep, currentStep + 1);
+  }
+)
+
 export const startSwap = atom(
   null,
-  async (get, set, { navigationCb, setSwapStatus }) => {
+  async (get, set, { 
+    nextStage, 
+    setSwapStatus,
+    setLockStxInfo,
+     
+  }) => {
     set(loadingInitSwap, true);
-    const url = `${lnswapApi}/createswap`;
+    const url = `${lnswapApi}/zcreateswap`;
     let { pair, invoice, keys, preimageHash, quoteAmount, baseAmount } = get(swapTxData);
 
     // Trim the "lightning:" prefix, that some wallets add in front of their invoices, if it exists
@@ -343,14 +402,15 @@ export const startSwap = atom(
 
     postData(url, body).then(data => {
       set(loadingInitSwap, false);
+      console.log('swapResponse: ', data);
   
       if (data.error) {
         window.alert(`Failed to execute swap: ${data.error}`);
         return;
       }
-      console.log(data);
       set(sendSwapResponse, data);
 
+      // add to tx history
       let _swapInfo = get(swapTxData)
       let refundObject: RefundInfo = {
         amount: parseInt((parseFloat(data.expectedAmount) / 100).toString()),
@@ -370,9 +430,12 @@ export const startSwap = atom(
 
       // start listening for tx
       let swapId = data.id;
-      startListeningForTx(swapId, setSwapStatus);
+      startListeningForTx(swapId, setSwapStatus, nextStage);
 
-      navigationCb();
+      // set Lock Tx Info
+      setLockStxInfo();
+
+      nextStage();
     }).catch(err => {
       console.log("startSwap err: ", err);
       const message = err.response.data.error;
@@ -390,7 +453,7 @@ export const useSendSwapStatusState = () => {
   return useAtom(sendSwapStatus);
 }
 
-export const startListeningForTx = (swapId: string, setSwapStatus: any) => {
+export const startListeningForTx = (swapId: string, setSwapStatus: any, nextStage: any) => {
   const url = `${lnswapApi}/streamswapstatus?id=${swapId}`;
   const source = new EventSource(url);
   console.log('start listening for tx...')
@@ -411,19 +474,19 @@ export const startListeningForTx = (swapId: string, setSwapStatus: any) => {
         clearInterval(interval);
         console.log('Reconnected to LN Swap');
 
-        startListeningForTx(swapId, setSwapStatus);
-        handleSwapStatus(response.data, setSwapStatus, source, {});
+        startListeningForTx(swapId, setSwapStatus, nextStage);
+        handleSwapStatus(response.data, setSwapStatus, source, nextStage);
       })
 
     }, 1000);
   }
 
   source.onmessage = (event: any) => {
-    handleSwapStatus(JSON.parse(event.data), setSwapStatus, source, {});
+    handleSwapStatus(JSON.parse(event.data), setSwapStatus, source, nextStage);
   }
 }
 
-export const handleSwapStatus = (data: any, setSwapStatus: any, source: any, callback: any) => {
+export const handleSwapStatus = (data: any, setSwapStatus: any, source: any, nextStage: any) => {
   const status = data.status;
   console.log('handleSwapStatus: ', data);
   
@@ -433,6 +496,7 @@ export const handleSwapStatus = (data: any, setSwapStatus: any, source: any, cal
         pending: true,
         message: "Waiting for invoice to be paid..."
       })
+      nextStage();
       break;
 
     case SwapUpdateEvent.InvoiceFailedToPay:
@@ -456,7 +520,7 @@ export const handleSwapStatus = (data: any, setSwapStatus: any, source: any, cal
     case SwapUpdateEvent.InvoicePaid:
     case SwapUpdateEvent.TransactionClaimed:
       source.close();
-      callback();
+      nextStage();
       break;
 
     case SwapUpdateEvent.ASTransactionMempool:
@@ -509,3 +573,148 @@ export const handleSwapStatus = (data: any, setSwapStatus: any, source: any, cal
       break;
   }
 }
+
+export const setLockStxInfo = atom(
+  null,
+  async (get, set) => {
+    let _swapResponse = get(sendSwapResponse);
+    let _swapInfo = get(swapTxData);
+
+    let contractAddress = getContractAddress(_swapResponse.address);
+    let contractName = getContractName(_swapResponse.address);
+    
+    let paymenthash;
+    if (_swapInfo.invoice.toLowerCase().slice(0, 2) === 'ln') {
+      let decoded = lightningPayReq.decode(_swapInfo.invoice);
+      let obj = decoded.tags;
+
+      for (let i = 0; i < obj.length; i++) {
+        const tag = obj[i];
+        if (tag.tagName === 'payment_hash') {
+          paymenthash = tag.data;
+        }
+      }
+    } else {
+      paymenthash = _swapInfo.preimageHash;
+    }
+
+    console.log('paymenthash: ', paymenthash);
+
+    let swapAmount, postConditionAmount;
+    let expectedAmount = 0;
+    console.log('expectedAmount: ', _swapResponse.expectedAmount, typeof(_swapResponse.expectedAmount))
+    if (typeof(_swapResponse.expectedAmount) === 'string') {
+      expectedAmount = Number(_swapResponse.expectedAmount);
+    } else {
+      expectedAmount = _swapResponse.expectedAmount
+    }
+
+    if (expectedAmount === 0) {
+      // atomic swap
+      console.log(
+        'expectedAmount is 0, this is an atomic swap ',
+        expectedAmount,
+        _swapResponse.baseAmount
+      );
+      let amountToLock = _swapResponse.baseAmount;
+      swapAmount = (amountToLock * 1000000).toString(16).split('.')[0] + '';
+      postConditionAmount = Math.ceil(amountToLock * 1000000);
+    } else {
+      console.log(
+        'expectedAmount is NOT 0, regular swap ',
+        expectedAmount
+      );
+      swapAmount = (expectedAmount / 100).toString(16).split('.')[0] + '';
+      postConditionAmount = Math.ceil(expectedAmount / 100);
+      // *1000
+      // 199610455 -> 199 STX
+    }
+    console.log(
+      'swapAmount, postConditionAmount',
+      swapAmount,
+      postConditionAmount
+    );
+
+    console.log(
+      'calc: ',
+      expectedAmount,
+      expectedAmount / 100,
+      _swapResponse.baseAmount
+    )
+
+    let paddedAmount = swapAmount.padStart(32, '0');
+    let paddedTimelock = _swapResponse.timeoutBlockHeight.toString(16).padStart(32, '0');
+    console.log('paddedAmount, paddedTimelock: ', paddedAmount, paddedTimelock);
+
+    let stxAddress = get(currentAccountStxAddressState);
+    const _postConditionCode = FungibleConditionCode.LessEqual;
+    const _postConditionAmount = new BN(postConditionAmount);
+    const postConditions = [
+      createSTXPostCondition(
+        stxAddress ? stxAddress : "",
+        _postConditionCode,
+        _postConditionAmount
+      )
+    ];
+    console.log('postConditions: ', stxAddress, postConditions);
+    console.log('paymenthash: ', paymenthash, typeof(paymenthash));
+    console.log('swapresponse.claimAddress: ', _swapResponse.claimAddress);
+
+    const functionArgs = [
+      bufferCV(Buffer.from(paymenthash, 'hex')),
+      bufferCV(Buffer.from(paddedAmount, 'hex')),
+      bufferCV(Buffer.from('01', 'hex')),
+      bufferCV(Buffer.from('01', 'hex')),
+      bufferCV(Buffer.from(paddedTimelock, 'hex')),
+      standardPrincipalCV(_swapResponse.claimAddress)
+    ];
+    console.log('functionArgs:', functionArgs);
+
+    const account = get(currentAccountState);
+    const network = get(currentStacksNetworkState);
+    let _txOptions: UnsignedContractCallOptions = {
+      contractAddress: contractAddress,
+      contractName: contractName,
+      functionName: 'lockStx',
+      functionArgs: functionArgs,
+      publicKey: publicKeyToString(pubKeyfromPrivKey(account ? account.stxPrivateKey : '')),
+      network: network,
+      postConditions: postConditions,
+      anchorMode: AnchorMode.Any
+    }
+    console.log('txOptions: ', txOptions);
+    const transaction = await makeUnsignedContractCall(_txOptions);
+    const _serializedTxPayload = serializePayload(transaction.payload).toString('hex');
+    const _estimatedTxByteLength = transaction.serialize().byteLength;
+    set(serializedTxPayload, _serializedTxPayload);
+    set(estimatedTxByteLength, _estimatedTxByteLength);
+    set(txOptions, _txOptions);
+    set(unsignedTx, transaction);
+  }
+)
+
+export const broadcastLockStx = atom(
+  null,
+  async (get, set) => {
+    let _transaction = get(unsignedTx);
+
+    if (_transaction === undefined) {
+      return;
+    }
+
+    console.log('found tx')
+    const network = get(currentStacksNetworkState);
+    const account = get(currentAccountState);
+    const signer = new TransactionSigner(_transaction);
+    signer.signOrigin(createStacksPrivateKey(account ? account.stxPrivateKey : ''));
+    
+    if (_transaction) {
+      set(lockStxTxSubmitted, true);
+      const broadcastResponse = await broadcastTransaction(_transaction, network);
+      const txId = broadcastResponse.txid;
+      set(lockStxTxId, txId);
+      set(lockStxTxSubmitted, false);
+      set(previewLockStxVisibility, false);
+    }
+  }
+)

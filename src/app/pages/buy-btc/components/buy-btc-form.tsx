@@ -4,14 +4,14 @@ import { Box, Stack, Text } from "@stacks/ui"
 import { Suspense, useEffect } from "react"
 import { SendAmountField } from "./send-amount-field"
 import { ReceiveAmountField } from "./receive-amount-field"
-import { getPairs, handleSwapStatus, initSwap, useFeeRateState, useMaxBitcoinValueState, useMinBitcoinValueState, useReceiveTokenState, useReceiveValueState, useSendTokenState, useSendValueState, useStxBtcRateState, useSwapFormErrorState } from "../hooks/swap-btc.hooks"
+import { getPairs, initSwap, navigateNextStep, useFeeRateState, useReceiveTokenState, useReceiveValueState, useSendTokenState, useSendValueState, useStxBtcRateState, useSwapFormErrorState } from "../hooks/swap-btc.hooks"
 import { useAtom } from "jotai"
 import { useNavigate } from "react-router-dom"
 import { RouteUrls } from "@shared/route-urls"
 import { CgArrowsExchangeAltV } from 'react-icons/cg';
 import { calculateReceiveValue } from "../utils/utils"
 import { ErrorLabel } from "@app/components/error-label"
-import { SwapUpdateEvent } from "../constants/networks"
+import { initLnSwap } from "../hooks/ln-swap-btc.hooks"
 
 export const BuyBtcForm = () =>  {
   const navigate = useNavigate();
@@ -23,8 +23,10 @@ export const BuyBtcForm = () =>  {
   const [feeRate, ] = useFeeRateState();
   const [swapFormError, ] = useSwapFormErrorState();
   const [, _initSwap] = useAtom(initSwap);
+  const [, _initLnSwap] = useAtom(initLnSwap);
   const [, _getPairs] = useAtom(getPairs);
   const [, _calculateReceiveValue] = useAtom(calculateReceiveValue);
+  const [, nextStep] = useAtom(navigateNextStep);
 
   useEffect(() => {
     _getPairs();
@@ -39,13 +41,10 @@ export const BuyBtcForm = () =>  {
   }
 
   const swapPair = () => {
-    if (sendToken === 'STX') {
-      setSendToken("BTC");
-      setReceiveToken("STX");
-    } else {
-      setSendToken("STX");
-      setReceiveToken("BTC");
-    }
+    let _sendToken = sendToken;
+    let _receiveToken = receiveToken;
+    setSendToken(_receiveToken);
+    setReceiveToken(_sendToken);
     setSendValue(receiveValue);
     setReceiveValue(sendValue);
   }
@@ -57,6 +56,13 @@ export const BuyBtcForm = () =>  {
 
   const navigateToInsertAddressPage = () => {
     navigate(RouteUrls.InsertAddress);
+  }
+
+  const isLightning = () => {
+    if (sendToken.includes("⚡")) {
+      return true;
+    }
+    return false;
   }
   
   return (
@@ -102,7 +108,13 @@ export const BuyBtcForm = () =>  {
         <PrimaryButton
           // data-testid=""
           width="100%"
-          onClick={() => _initSwap(navigateToInsertAddressPage)}
+          onClick={
+            isLightning()
+            ?
+            () => _initLnSwap(navigateToInsertAddressPage)
+            :
+            () => _initSwap(() => nextStep(navigate))
+          }
           isDisabled={
             sendValue === ''
           }
